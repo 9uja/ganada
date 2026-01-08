@@ -36,7 +36,6 @@ export type Item = {
   id: string;
   name: string;
   desc?: string;
-  // ✅ 아이템 자체는 All이 아닌 실제 카테고리만
   category: Exclude<Category, "All">;
   tags?: ("Best" | "Spicy")[];
   image: { src: string; alt: string };
@@ -44,6 +43,7 @@ export type Item = {
 };
 
 export const items: Item[] = [
+  //BEEF BBQ  
   {
     id: "beef-bbq-1",
     category: "BEEF BBQ",
@@ -77,6 +77,8 @@ export const items: Item[] = [
     image: { src: publicUrl("menu/wang-galbi.webp"), alt: "WANG GALBI" },
     price: { kind: "market" },
   },
+
+  //PORK BBQ
   {
     id: "pork-bbq-1",
     category: "PORK BBQ",
@@ -86,6 +88,30 @@ export const items: Item[] = [
     image: { src: publicUrl("menu/samgyeopsal.webp"), alt: "SAMGYEOPSAL" },
     price: { kind: "market" },
   },
+
+  //OTHER BBQ
+  
+  //HOTPOT
+  {
+    id: "hotpot-1",
+    category: "HOTPOT",
+    name: "KIMCHI JJIM",
+    desc: "Aged kimchi hotpot with pork belly and ribs.\n•30 mins cooking time",
+    image: { src: publicUrl("menu/kimchi-jjim.webp"), alt: "KIMCHI JJIM" },
+    price: { kind: "fixed", rm: 140 },
+  },
+
+  //STEW
+  {
+    id: "stew-1",
+    category: "STEW",
+    name: "KIMCHI JJIGAE",
+    desc: "Spicy stew made with kimchi, pork, vegetables and tofu",
+    image: { src: publicUrl("menu/kimchi-jjigae.webp"), alt: "KIMCHI JJIGAE" },
+    price: { kind: "fixed", rm: 32 },
+  },
+
+  //SIDEDISH
   {
     id: "side-1",
     category: "SIDEDISH",
@@ -94,4 +120,26 @@ export const items: Item[] = [
     image: { src: publicUrl("menu/kimchi-jeon.webp"), alt: "KIMCHI JEON" },
     price: { kind: "fixed", rm: 40 },
   },
+
+  //RICE
+
+  //NOODLES
+  {
+    id: "noodles-1",
+    category: "NOODLES",
+    name: "MUL NAENGMYEON",
+    desc: "Chilled buckwheat noodles.\nserved in beef broth",
+    image: { src: publicUrl("menu/mul-naengmyeon.webp"), alt: "MUL NAENGMYEON" },
+    price: { kind: "fixed", rm: 30 },
+  },
+  {
+    id: "noodles-2",
+    category: "NOODLES",
+    name: "BIBIM NAENGMYEON",
+    desc: "Chilled buckwheat noodles mixed.\nin spicy sauce",
+    image: { src: publicUrl("menu/bibim-naengmyeon.webp"), alt: "BIBIM NAENGMYEON" },
+    price: { kind: "fixed", rm: 30 },
+  },
+
+  //BEVERAGES
 ];

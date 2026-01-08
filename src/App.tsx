@@ -117,8 +117,7 @@ export default function App() {
                 <span className="whitespace-nowrap ganada-logo-font inline-flex items-baseline leading-none">
                   <span className="text-[1.18em] tracking-[0.01em]">G</span>
                   <span className="tracking-[0.08em]">ANADA</span>
-                </span>{" "}
-                <span className="text-neutral-400">Korean BBQ Restaurant</span>
+                </span>
               </span>
             </Link>
             <nav className="hidden gap-2 md:flex">

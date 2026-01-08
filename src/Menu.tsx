@@ -441,24 +441,32 @@ export default function Menu() {
               />
             </div>
 
-            <div className="mt-3 flex items-start justify-between gap-3">
+            <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between sm:gap-3">
+              {/* Left: title/desc */}
               <div className="min-w-0">
                 <div className="flex flex-wrap items-center gap-2">
-                  <h3 className="truncate text-base font-semibold">{m.name}</h3>
+                  <h3 className="line-clamp-2 text-sm font-semibold leading-snug sm:text-base">
+                    {m.name}
+                  </h3>
+
                   {m.tags?.map((t) => (
                     <span
                       key={t}
-                      className="rounded-full border border-neutral-700 px-2 py-0.5 text-xs text-neutral-200"
+                      className="rounded-full border border-neutral-700 px-2 py-0.5 text-[11px] text-neutral-200"
                     >
                       {t}
                     </span>
                   ))}
                 </div>
 
-                {m.desc && <p className="mt-1 line-clamp-2 text-sm text-neutral-300">{m.desc}</p>}
+                {m.desc && (
+                  <p className="mt-1 whitespace-pre-line line-clamp-3 text-xs leading-relaxed text-neutral-300 sm:text-sm">
+                    {m.desc}
+                  </p>
+                )}
               </div>
 
-              <div className="shrink-0 text-right">
+              <div className="flex items-baseline justify-between gap-2 sm:flex-col sm:items-end sm:text-right">
                 <div className="text-sm font-semibold">{priceLabel(m.price)}</div>
                 {priceSubLabel(m.price) && (
                   <div className="text-xs text-neutral-400">{priceSubLabel(m.price)}</div>
