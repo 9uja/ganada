@@ -1,10 +1,9 @@
 // src/Menu.tsx
+import { useEffect, useMemo, useState } from "react";
+import { categories, items, type Category, type Item } from "./menuData";
 
 /** GitHub Pages(예: /menu/)에서도 public 파일이 깨지지 않게 base를 자동 반영 */
 const publicUrl = (p: string) => `${import.meta.env.BASE_URL}${p.replace(/^\/+/, "")}`;
-
-import { useEffect, useMemo, useState } from "react";
-import { categories, items, type Category, type Item } from "./menuData";
 
 /** ---------------------------
  * Category icon images (public/)
@@ -29,12 +28,16 @@ function categoryIconSrc(c: Category) {
       return publicUrl("category-icons/beef-bbq.png");
     case "PORK BBQ":
       return publicUrl("category-icons/pork-bbq.png");
+    case "LIVE":
+      return publicUrl("category-icons/live.png");
     case "OTHER BBQ":
       return publicUrl("category-icons/other-bbq.png");
     case "HOTPOT":
       return publicUrl("category-icons/hotpot.png");
-      case "STEW":
+    case "STEW":
       return publicUrl("category-icons/stew.png");
+    case "CHEESE SERIES":
+      return publicUrl("category-icons/cheese-series.png");
     case "SIDEDISH":
       return publicUrl("category-icons/sidedish.png");
     case "RICE":
@@ -95,16 +98,13 @@ function priceSubLabel(p: Item["price"]) {
 /** ---- 추천 정렬: Best/Spicy 상단, 나머지는 기존 items 순서 유지 ---- **/
 function tagScore(tags?: Item["tags"]) {
   if (!tags || tags.length === 0) return 0;
-  if (tags.includes("Best")) return 2;
-  return 1; // e.g. Spicy only
+  return tags.includes("🔥Best") ? 1 : 0; // ✅ Best만 상단
 }
 
 function getItemsForCategory(active: Category) {
   const indexed = items.map((it, idx) => ({ it, idx }));
   const filtered =
-    active === "All"
-      ? indexed
-      : indexed.filter(({ it }) => it.category === active);
+    active === "All" ? indexed : indexed.filter(({ it }) => it.category === active);
 
   return filtered
     .sort((a, b) => {
@@ -199,7 +199,6 @@ function CategorySheet({
                 }}
                 className={[
                   "flex items-center justify-between rounded-2xl border px-4 py-3 text-left transition",
-                  // ✅ keep dark background even when active (works better with PNG icons)
                   isActive
                     ? "border-neutral-200 bg-neutral-900 text-neutral-50"
                     : "border-neutral-800 bg-neutral-950 hover:bg-neutral-900/40",
@@ -216,7 +215,9 @@ function CategorySheet({
                   <span className="truncate text-sm font-semibold">{c}</span>
                 </span>
 
-                {isActive && <span className="text-xs font-semibold opacity-80">Selected</span>}
+                {isActive && (
+                  <span className="text-xs font-semibold opacity-80">Selected</span>
+                )}
               </button>
             );
           })}
@@ -273,7 +274,10 @@ function Lightbox({
       >
         <div className="flex items-center justify-between gap-3 border-b border-neutral-800 px-4 py-3">
           <div className="min-w-0">
-            <p className="truncate text-sm font-semibold">{item.name}</p>
+            <p className="truncate text-sm font-semibold">
+              {item.nameKo ? item.nameKo : item.name}
+            </p>
+            {item.nameKo && <p className="truncate text-xs text-neutral-400">{item.name}</p>}
             <p className="text-xs text-neutral-400">
               {priceLabel(item.price)}
               {priceSubLabel(item.price) ? ` • ${priceSubLabel(item.price)}` : ""}
@@ -299,7 +303,11 @@ function Lightbox({
             />
           </div>
 
-          {item.desc && <p className="mt-3 text-sm text-neutral-300">{item.desc}</p>}
+          {item.desc && (
+            <p className="mt-3 whitespace-pre-line text-sm text-neutral-300">
+              {item.desc}
+            </p>
+          )}
         </div>
       </div>
     </div>
@@ -307,18 +315,16 @@ function Lightbox({
 }
 
 export default function Menu() {
-  // ✅ default category
   const [active, setActive] = useState<Category>("All");
-
   const [sheetOpen, setSheetOpen] = useState(false);
   const [lightboxItem, setLightboxItem] = useState<Item | null>(null);
 
-  // ✅ floating button appears only after some scroll
+  // floating button appears only after some scroll
   const [showFloating, setShowFloating] = useState(false);
 
   const list = useMemo(() => getItemsForCategory(active), [active]);
 
-  /** initial preload (current view) */
+  /** initial preload */
   useEffect(() => {
     const first = getItemsForCategory(active).map((x) => x.image.src);
     preloadImagesBatch(first, 8);
@@ -345,13 +351,15 @@ export default function Menu() {
   useEffect(() => {
     const idx = categories.indexOf(active);
     const next = categories[(idx + 1) % categories.length];
-    const srcsNext = getItemsForCategory(next).slice(0, 6).map((x) => x.image.src);
+    const srcsNext = getItemsForCategory(next)
+      .slice(0, 6)
+      .map((x) => x.image.src);
 
     const t = window.setTimeout(() => preloadImagesBatch(srcsNext, 6), 250);
     return () => window.clearTimeout(t);
   }, [active]);
 
-  /** scroll observer for floating button + top bar hide */
+  /** scroll observer */
   useEffect(() => {
     const THRESHOLD = 180;
     let ticking = false;
@@ -401,7 +409,7 @@ export default function Menu() {
         </a>
       </div>
 
-      {/* ✅ Top category bar: only near top */}
+      {/* Top category bar: only near top */}
       {!showFloating && (
         <div className="mt-5">
           <button
@@ -420,7 +428,7 @@ export default function Menu() {
         </div>
       )}
 
-      {/* ✅ Items grid: mobile 2 columns */}
+      {/* Items grid: mobile 2 columns */}
       <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-2 lg:grid-cols-3">
         {list.map((m) => (
           <button
@@ -441,22 +449,33 @@ export default function Menu() {
               />
             </div>
 
+            {/* ✅ KO/EN forced on separate lines (KO top + tags), EN below */}
             <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between sm:gap-3">
               {/* Left: title/desc */}
               <div className="min-w-0">
-                <div className="flex flex-wrap items-center gap-2">
-                  <h3 className="line-clamp-2 text-sm font-semibold leading-snug sm:text-base">
-                    {m.name}
-                  </h3>
+                <div className="min-w-0">
+                  {/* 1st line: KO + tags */}
+                  <div className="flex min-w-0 items-center gap-2">
+                    <h3 className="min-w-0 truncate text-sm font-semibold leading-snug sm:text-base">
+                      {m.nameKo ?? m.name}
+                    </h3>
 
-                  {m.tags?.map((t) => (
-                    <span
-                      key={t}
-                      className="rounded-full border border-neutral-700 px-2 py-0.5 text-[11px] text-neutral-200"
-                    >
-                      {t}
-                    </span>
-                  ))}
+                    {m.tags?.map((t) => (
+                      <span
+                        key={t}
+                        className="shrink-0 rounded-full border border-neutral-700 px-2 py-0.5 text-[11px] text-neutral-200"
+                      >
+                        {t}
+                      </span>
+                    ))}
+                  </div>
+
+                  {/* 2nd line: EN (forced new line) */}
+                  {m.nameKo && (
+                    <p className="mt-0.5 block w-full truncate text-xs text-neutral-400 sm:text-sm">
+                      {m.name}
+                    </p>
+                  )}
                 </div>
 
                 {m.desc && (
@@ -466,6 +485,7 @@ export default function Menu() {
                 )}
               </div>
 
+              {/* Right: price (mobile stacked) */}
               <div className="flex items-baseline justify-between gap-2 sm:flex-col sm:items-end sm:text-right">
                 <div className="text-sm font-semibold">{priceLabel(m.price)}</div>
                 {priceSubLabel(m.price) && (
@@ -489,7 +509,7 @@ export default function Menu() {
         </p>
       )}
 
-      {/* ✅ Floating category button */}
+      {/* Floating category button */}
       {canShowFloating && (
         <button
           onClick={() => setSheetOpen(true)}
