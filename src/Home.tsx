@@ -356,7 +356,7 @@ function RecommendedMenuCarousel({
             className="flex transition-transform duration-500"
             style={{ transform: `translateX(-${mIdx * 100}%)` }}
           >
-            {list.map((m, idx) => (
+            {list.map((m) => (
               <div key={m.id} className="w-full shrink-0 p-3">
                 <Link
                   to={`/menu?item=${encodeURIComponent(m.id)}`}
@@ -419,9 +419,9 @@ function RecommendedMenuCarousel({
             {pages.map((page, pageIdx) => (
               <div key={`page-${pageIdx}`} className="w-full shrink-0 p-3">
                 <div className="grid grid-cols-2 gap-3">
-                  {page.map((m, idx) => (
+                  {page.map((m) => (
                     <Link
-                      key={`${m.category}-${m.id}-${idx}`}
+                      key={`${m.category}-${m.id}`}
                       to={`/menu?item=${encodeURIComponent(m.id)}`}
                       className="rounded-3xl border border-neutral-200 bg-white p-3 shadow-sm transition hover:bg-neutral-50"
                     >
