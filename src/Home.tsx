@@ -18,16 +18,6 @@ function resolveSrc(src: string) {
   return publicUrl(src);
 }
 
-/** ---- price label ---- **/
-function priceLabel(p: Item["price"]) {
-  if (p.kind === "market") return "Market Price";
-  return `RM ${p.rm.toFixed(2)}`;
-}
-function priceSubLabel(p: Item["price"]) {
-  if (p.kind === "market") return "Ask staff";
-  return null;
-}
-
 /** Full-bleed wrapper inside a centered layout */
 function FullBleed({ children }: { children: ReactNode }) {
   return (
@@ -38,33 +28,22 @@ function FullBleed({ children }: { children: ReactNode }) {
 }
 
 /**
- * Arrow-only button (circle hidden).
- * - Keeps a circular hit area (size) but makes background/border/shadow invisible.
- * - Arrow color can be controlled via `tone`.
+ * Invisible nav button (arrow removed).
+ * - Keeps an accessible hit area but renders no visible icon.
  */
-function CircleArrowButton({
-  dir,
+function CarouselNavButton({
   onClick,
   ariaLabel,
   size = "md",
   className = "",
-  tone = "dark",
 }: {
-  dir: "left" | "right";
   onClick: () => void;
   ariaLabel: string;
   size?: "sm" | "md" | "lg";
   className?: string;
-  tone?: "dark" | "light"; // light = white arrow (for dark backgrounds)
 }) {
   const sizeClass =
-    size === "sm"
-      ? "h-10 w-10"
-      : size === "lg"
-      ? "h-14 w-14"
-      : "h-12 w-12";
-
-  const arrowColor = tone === "light" ? "text-white" : "text-neutral-900";
+    size === "sm" ? "h-10 w-10" : size === "lg" ? "h-14 w-14" : "h-12 w-12";
 
   return (
     <button
@@ -74,14 +53,14 @@ function CircleArrowButton({
       className={[
         "inline-flex items-center justify-center rounded-full",
         sizeClass,
-        // circle hidden
+        // circle hidden + no icon
         "bg-transparent border border-transparent shadow-none",
         "transition active:scale-[0.98] hover:opacity-90",
         "focus:outline-none focus-visible:ring-4 focus-visible:ring-neutral-900/15",
-        arrowColor,
         className,
       ].join(" ")}
     >
+      {/* arrow/icon intentionally removed */}
     </button>
   );
 }
@@ -121,7 +100,10 @@ function BannerCarousel({
   // autoplay (always)
   useEffect(() => {
     if (slides.length <= 1) return;
-    const t = window.setInterval(() => setIdx((v) => (v + 1) % slides.length), autoMs);
+    const t = window.setInterval(
+      () => setIdx((v) => (v + 1) % slides.length),
+      autoMs
+    );
     return () => window.clearInterval(t);
   }, [slides.length, autoMs]);
 
@@ -167,7 +149,11 @@ function BannerCarousel({
   };
 
   return (
-    <section className="bg-neutral-950" aria-roledescription="carousel" aria-label="Top banners">
+    <section
+      className="bg-neutral-950"
+      aria-roledescription="carousel"
+      aria-label="Top banners"
+    >
       <div className="mx-auto max-w-6xl px-4">
         <div className="relative overflow-hidden rounded-none sm:rounded-3xl">
           <div
@@ -208,7 +194,8 @@ function BannerCarousel({
                     decoding="async"
                     draggable={false}
                     onError={(e) => {
-                      (e.currentTarget as HTMLImageElement).style.display = "none";
+                      (e.currentTarget as HTMLImageElement).style.display =
+                        "none";
                     }}
                   />
                   <div className="absolute inset-0 bg-gradient-to-r from-black/35 via-black/10 to-black/15" />
@@ -216,30 +203,26 @@ function BannerCarousel({
               );
             })}
 
-            {/* prev/next (arrow-only, circle hidden) */}
+            {/* prev/next (icon removed) */}
             <div className="pointer-events-none absolute inset-0 flex items-center justify-between px-3 sm:px-5">
               <div className="pointer-events-auto">
-                <CircleArrowButton
-                  dir="left"
+                <CarouselNavButton
                   ariaLabel="Previous banner"
                   onClick={prev}
                   size="lg"
-                  tone="light"
                 />
               </div>
 
               <div className="pointer-events-auto">
-                <CircleArrowButton
-                  dir="right"
+                <CarouselNavButton
                   ariaLabel="Next banner"
                   onClick={next}
                   size="lg"
-                  tone="light"
                 />
               </div>
             </div>
 
-            {/* ✅ dots / 1/3 표기 제거 → CTA만 유지 */}
+            {/* ✅ dots + 1/3 제거 → CTA만 유지 */}
             <div className="absolute bottom-0 left-0 right-0">
               <div className="mx-auto flex max-w-6xl justify-end px-4 pb-4 pt-3 sm:pb-5">
                 <Cta />
@@ -278,7 +261,10 @@ function RecommendedMenuCarousel({
 
   useEffect(() => {
     if (list.length <= 1) return;
-    const t = window.setInterval(() => setMIdx((v) => (v + 1) % list.length), autoMs);
+    const t = window.setInterval(
+      () => setMIdx((v) => (v + 1) % list.length),
+      autoMs
+    );
     return () => window.clearInterval(t);
   }, [list.length, autoMs]);
 
@@ -300,18 +286,20 @@ function RecommendedMenuCarousel({
           <h2 className="text-2xl font-extrabold tracking-tight text-neutral-900 sm:text-2xl">
             RECOMMENDED
           </h2>
+          <p className="mt-1 text-sm text-neutral-600">
+            <span className="font-extrabold text-neutral-900">Best</span> 태그 메뉴 자동 노출
+          </p>
         </div>
 
-        {/* Desktop buttons (arrow-only, circle hidden) */}
+        {/* Desktop buttons (icon removed) */}
         <div className="hidden items-center gap-2 sm:flex">
-          <CircleArrowButton dir="left" ariaLabel="이전" onClick={() => scrollByPage(-1)} size="sm" tone="dark" />
-          <CircleArrowButton dir="right" ariaLabel="다음" onClick={() => scrollByPage(1)} size="sm" tone="dark" />
+          <CarouselNavButton ariaLabel="이전" onClick={() => scrollByPage(-1)} size="sm" />
+          <CarouselNavButton ariaLabel="다음" onClick={() => scrollByPage(1)} size="sm" />
         </div>
       </div>
 
       {/* ---------------- MOBILE ---------------- */}
       <div className="relative mt-5 sm:hidden">
-        {/* slider (clipping area) */}
         <div
           className="relative overflow-hidden rounded-3xl border border-neutral-200 bg-white"
           onTouchStart={(e) => {
@@ -338,8 +326,10 @@ function RecommendedMenuCarousel({
           >
             {list.map((m, idx) => (
               <div key={`${m.category}-${m.id}-${idx}`} className="w-full shrink-0 p-3">
-                <Link to={`/menu?item=${encodeURIComponent(m.id)}`} className="block rounded-3xl bg-white">
-                  {/* 이미지 보더/bg 제거 유지 */}
+                <Link
+                  to={`/menu?item=${encodeURIComponent(m.id)}`}
+                  className="block rounded-3xl bg-white"
+                >
                   <div className="aspect-[4/3] overflow-hidden rounded-2xl">
                     <img
                       src={resolveSrc(m.image.src)}
@@ -357,6 +347,11 @@ function RecommendedMenuCarousel({
                         <h3 className="min-w-0 truncate text-base font-extrabold leading-snug text-neutral-900">
                           {m.nameKo ?? m.name}
                         </h3>
+                        {m.tags?.includes("Best") && (
+                          <span className="shrink-0 rounded-full bg-amber-400 px-2 py-0.5 text-[11px] font-extrabold text-neutral-950">
+                            Best
+                          </span>
+                        )}
                       </div>
 
                       {m.nameKo && (
@@ -371,16 +366,16 @@ function RecommendedMenuCarousel({
             ))}
           </div>
 
-          {/* ✅ 추천메뉴 모바일 dots 제거: 이 블록 자체를 삭제 */}
+          {/* ✅ 추천메뉴 모바일 dots 제거 완료 */}
         </div>
 
-        {/* buttons outside (less overlap) + smaller (size=sm) + circle hidden */}
+        {/* buttons outside (icon removed) */}
         <div className="pointer-events-none absolute inset-y-0 left-0 right-0 z-10 flex items-center justify-between">
           <div className="pointer-events-auto -translate-x-[40%]">
-            <CircleArrowButton dir="left" ariaLabel="이전" onClick={prevMobile} size="sm" tone="dark" />
+            <CarouselNavButton ariaLabel="이전" onClick={prevMobile} size="sm" />
           </div>
           <div className="pointer-events-auto translate-x-[40%]">
-            <CircleArrowButton dir="right" ariaLabel="다음" onClick={nextMobile} size="sm" tone="dark" />
+            <CarouselNavButton ariaLabel="다음" onClick={nextMobile} size="sm" />
           </div>
         </div>
       </div>
@@ -405,7 +400,6 @@ function RecommendedMenuCarousel({
                 "rounded-3xl border border-neutral-200 bg-white p-3 shadow-sm transition hover:bg-neutral-50",
               ].join(" ")}
             >
-              {/* 이미지 보더/bg 제거 유지 */}
               <div className="aspect-[4/3] overflow-hidden rounded-2xl">
                 <img
                   src={resolveSrc(m.image.src)}
@@ -423,6 +417,11 @@ function RecommendedMenuCarousel({
                     <h3 className="min-w-0 truncate text-sm font-extrabold leading-snug text-neutral-900 sm:text-base">
                       {m.nameKo ?? m.name}
                     </h3>
+                    {m.tags?.includes("Best") && (
+                      <span className="shrink-0 rounded-full bg-amber-400 px-2 py-0.5 text-[11px] font-extrabold text-neutral-950">
+                        Best
+                      </span>
+                    )}
                   </div>
 
                   {m.nameKo && (
@@ -500,6 +499,7 @@ export default function Home() {
           </div>
         </Link>
       </section>
+
       <div className="h-6" />
     </div>
   );
