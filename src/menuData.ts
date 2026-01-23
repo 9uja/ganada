@@ -17,18 +17,6 @@ export type Category =
   | "NOODLES"
   | "BEVERAGES";
 
-export type Item = {
-  id: string;
-  category: Exclude<Category, "All">;
-  name: string;
-  nameKo?: string;
-  desc?: string;
-  image: { src: string; alt: string };
-  price:
-    | { kind: "fixed"; rm: number }
-    | { kind: "market" };
-  tags?: string[];
-};
 
 export const categories: Category[] = [
   "All",
@@ -46,13 +34,19 @@ export const categories: Category[] = [
 ];
 
 
+export type Price =
+  | { kind: "fixed"; rm: number }
+  | { kind: "market" };
+
+export type Tag = "Best" | "Spicy" | "SOJU" | "BEER" | "WINE" | "SOFT DRINKS";
+
 export type Item = {
   id: string;
   name: string;
   nameKo?: string;    // KO (optional)
   desc?: string;
   category: Exclude<Category, "All">;
-  tags?: ("Best" | "Spicy"| "SOJU" | "BEER" | "WINE" | "SOFT DRINKS")[];
+  tags?: Tag[];
   image: { src: string; alt: string };
   price: Price;
 };
@@ -621,7 +615,7 @@ export const items: Item[] = [
     nameKo: "비빔냉면",
     name: "BIBIM NAENGMYEON",
     desc: "Chilled buckwheat noodles mixed.\nin spicy sauce",
-    tags: ["🌶️Spicy"],
+    tags: ["Spicy"],
     image: { src: publicUrl("menu/noodles/bibim-naengmyeon.webp"), alt: "BIBIM NAENGMYEON" },
     price: { kind: "fixed", rm: 30 },
   },
