@@ -429,26 +429,30 @@ export default function Menu() {
         </button>
       </div>
 
-      {!showFloating && (
-        <div className="mt-5">
-          <button
-            onClick={() => setSheetOpen(true)}
-            className="flex w-full items-center justify-between rounded-2xl border border-neutral-200 bg-white px-4 py-3 text-left shadow-sm hover:bg-neutral-50"
-            type="button"
-          >
-            <span className="flex min-w-0 items-center gap-3">
-              <CategoryIcon c={active} className="h-5 w-5 shrink-0" colorClass="bg-neutral-900" />
-              <span className="min-w-0">
-                <span className="block text-xs font-semibold text-neutral-500">Category</span>
-                <span className="block truncate text-sm font-extrabold text-neutral-900">
-                  {categoryLabel(active)}
-                </span>
+      <div className="mt-5">
+        <button
+          onClick={() => setSheetOpen(true)}
+          className={[
+            "flex w-full items-center justify-between rounded-2xl border border-neutral-200 bg-white px-4 py-3 text-left shadow-sm hover:bg-neutral-50",
+            // ✅ DOM 제거 대신 숨김 처리(공간 유지 → 스크롤 점프 방지)
+            showFloating ? "invisible pointer-events-none" : "visible",
+          ].join(" ")}
+          type="button"
+          aria-hidden={showFloating}
+          tabIndex={showFloating ? -1 : 0}
+        >
+          <span className="flex min-w-0 items-center gap-3">
+            <CategoryIcon c={active} className="h-5 w-5 shrink-0" colorClass="bg-neutral-900" />
+            <span className="min-w-0">
+              <span className="block text-xs font-semibold text-neutral-500">Category</span>
+              <span className="block truncate text-sm font-extrabold text-neutral-900">
+                {categoryLabel(active)}
               </span>
             </span>
-            <ChevronDownIcon className="h-5 w-5 text-neutral-500" />
-          </button>
-        </div>
-      )}
+          </span>
+          <ChevronDownIcon className="h-5 w-5 text-neutral-500" />
+        </button>
+      </div>
 
       <div className="mt-4 grid grid-cols-2 gap-1 sm:mt-6 sm:gap-3 lg:grid-cols-3">
         {list.map((m, idx) => (
