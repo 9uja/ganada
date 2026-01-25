@@ -409,21 +409,10 @@ export default function Menu() {
   };
 
   return (
-    <div className="mx-auto max-w-6xl pt-2 pb-8 sm:px-4">
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-extrabold tracking-tight text-neutral-900 sm:text-3xl">
-            Menu
-          </h1>
-          <p className="mt-1 text-sm font-semibold text-neutral-600 sm:text-base">
-            Tap any item to view photo.
-          </p>
-        </div>
-      </div>
-
+    <div className="mx-auto max-w-6xl px-0 pb-8 sm:px-0">
       {/* ✅ 상단 카테고리: 버블(필) + 가로 스크롤 + 우측 슬라이드 버튼 */}
-      <div className="mt-4">
-        <div className="relative rounded-3xl bg-[#d9c6b6]/70 px-3 py-3">
+      <div className="mt-3">
+        <div className="relative bg-[#d9c6b6]/70 px-2 sm:px-4 py-10">
           {/* 스크롤 영역 */}
           <div
             ref={catBarRef}
@@ -487,7 +476,7 @@ export default function Menu() {
         </div>
       </div>
 
-      <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
+      <div className="mt-4 px-2 sm:px-6 grid grid-cols-2 gap-2 sm:gap-3 sm:grid-cols-2">
         {list.map((m) => (
           <button
             key={`${m.category}-${m.name}-${m.image.src}`}
@@ -658,7 +647,7 @@ export default function Menu() {
               className={[
                 "flex items-center justify-center rounded-full border border-neutral-200 shadow-xl",
                 "focus:outline-none focus-visible:ring-4 focus-visible:ring-neutral-900/15",
-                "w-10 h-10 sm:w-14 sm:h-14",
+                "w-14 h-14 sm:w-16 sm:h-16",
                 "transition duration-200 ease-out",
                 fabOpen ? "bg-white text-neutral-900" : `border-transparent ${categoryAccentClass(active)}`,
               ].join(" ")}
@@ -685,7 +674,7 @@ export default function Menu() {
               className={[
                 "mt-2 flex items-center justify-center rounded-full border border-neutral-200 bg-white text-neutral-900 shadow-xl hover:bg-neutral-50",
                 "focus:outline-none focus-visible:ring-4 focus-visible:ring-neutral-900/15",
-                "w-10 h-10 sm:w-14 sm:h-14",
+                "w-14 h-14 sm:w-16 sm:h-16",
                 showTop ? "opacity-100" : "pointer-events-none opacity-40",
               ].join(" ")}
               aria-label="Scroll to top"

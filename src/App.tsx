@@ -182,7 +182,7 @@ export default function App() {
     : pathname === "/"
       ? "px-0 py-0"
       : pathname === "/menu"
-        ? "px-4 pt-4 pb-10 sm:pt-5"
+        ? "pb-10 sm:pt-5"
         : "px-4 py-10";
 
   return (
