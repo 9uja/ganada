@@ -172,7 +172,7 @@ function AnimatedMenuIcon({
 function ActiveTriStrokeBar() {
   return (
     <span
-      className="pointer-events-none absolute bottom-[-1px] h-[3px] overflow-hidden rounded-full"
+      className="pointer-events-none absolute bottom-[-1px] h-[6px] overflow-hidden rounded-full"
       style={{ left: -12, right: -12 }}
     >
       <span className="flex h-full w-full">
