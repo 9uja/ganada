@@ -147,7 +147,8 @@ function BannerCarousel({
     }
     return null;
   };
-// 최상단 배너 캐러셀
+
+  // 최상단 배너 캐러셀
   return (
     <section
       className="bg-neutral-950"
@@ -314,15 +315,17 @@ function RecommendedMenuCarousel({
 
   return (
     <section className="bg-white p-6 shadow-sm sm:p-8">
-      <div className="flex items-center justify-between gap-3">
-        <div className="flex-1 text-center">
-          <h2 className="text-2xl font-extrabold tracking-tight text-neutral-900 sm:text-2xl">
-            RECOMMENDED
-          </h2>
-        </div>
+      {/* ✅ 헤더: 버튼 유무와 관계없이 제목을 '화면 기준 정중앙'으로 고정 */}
+      <div className="grid items-center gap-3 sm:grid-cols-[1fr_auto_1fr]">
+        {/* left spacer (desktop에서만 균형용) */}
+        <div className="hidden sm:block" />
+
+        <h2 className="text-center text-2xl font-extrabold tracking-tight text-neutral-900 sm:text-2xl">
+          RECOMMENDED
+        </h2>
 
         {/* Desktop buttons (icon removed) - 제거 금지 */}
-        <div className="hidden items-center gap-2 sm:flex">
+        <div className="hidden items-center justify-end gap-2 sm:flex">
           <CarouselNavButton ariaLabel="이전" onClick={prevDesktop} size="sm" />
           <CarouselNavButton ariaLabel="다음" onClick={nextDesktop} size="sm" />
         </div>
@@ -448,7 +451,9 @@ function RecommendedMenuCarousel({
                   ))}
 
                   {/* 홀수 개수 보정(2칸 유지) */}
-                  {page.length === 1 && <div className="rounded-3xl border border-transparent p-3" />}
+                  {page.length === 1 && (
+                    <div className="rounded-3xl border border-transparent p-3" />
+                  )}
                 </div>
               </div>
             ))}
