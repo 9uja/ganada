@@ -3,11 +3,8 @@ import { useEffect, useMemo, useState } from "react";
 import { categories, items, type Category, type Item } from "./menuData";
 
 /** GitHub Pages(예: /menu/)에서도 public 파일이 깨지지 않게 base를 자동 반영 */
-const publicUrl = (p: string) => {
-  const base = import.meta.env.BASE_URL.replace(/\/+$/, "/");
-  const path = p.replace(/^\/+/, "");
-  return `${base}${path}`;
-};
+const publicUrl = (p: string) =>
+  `${import.meta.env.BASE_URL}${p.replace(/^\/+/, "")}`;
 
 function resolveSrc(src: string) {
   if (!src) return src;
@@ -29,21 +26,15 @@ function priceSubLabel(p: Item["price"]) {
   return null;
 }
 
-/** Display label (keep internal category values stable) */
 function categoryLabel(c: Category) {
   return c === "All" ? "ALL" : c;
 }
-
-// NOTE: Category state is intentionally not restored from query/localStorage.
-// This ensures that every fresh entry into the Menu tab starts from "All",
-// while category changes *within* the Menu page are preserved during the session.
 
 /** requestIdleCallback typing (avoid `any`) */
 type IdleDeadline = {
   didTimeout: boolean;
   timeRemaining: () => number;
 };
-
 type WindowWithIdleCallback = Window & {
   requestIdleCallback?: (
     cb: (deadline: IdleDeadline) => void,
@@ -67,24 +58,23 @@ function categoryIconSrc(c: Category) {
       return publicUrl("category-icons/other-bbq.svg");
     case "HOTPOT":
       return publicUrl("category-icons/hotpot.svg");
-    case "STEW":
-      return publicUrl("category-icons/stew.svg");
-    case "CHEESE SERIES":
-      return publicUrl("category-icons/cheese-series.svg");
-    case "SIDEDISH":
-      return publicUrl("category-icons/sidedish.svg");
-    case "RICE":
-      return publicUrl("category-icons/rice.svg");
-    case "NOODLES":
-      return publicUrl("category-icons/noodles.svg");
-    case "BEVERAGES":
-      return publicUrl("category-icons/beverages.svg");
+    case "MEAT DISH":
+      return publicUrl("category-icons/meat-dish.svg");
+    case "SEAFOOD DISH":
+      return publicUrl("category-icons/seafood-dish.svg");
+    case "NOODLES & RICE":
+      return publicUrl("category-icons/noodles-rice.svg");
+    case "SIDE DISH":
+      return publicUrl("category-icons/side-dish.svg");
+    case "SOUP & STEW":
+      return publicUrl("category-icons/soup-stew.svg");
+    case "LUNCH SPECIAL":
+      return publicUrl("category-icons/lunch-special.svg");
     default:
       return publicUrl("category-icons/all.svg");
   }
 }
 
-/** SVG recolor via CSS mask */
 function CategoryIcon({
   c,
   className = "",
@@ -97,8 +87,7 @@ function CategoryIcon({
   const url = categoryIconSrc(c);
   return (
     <span
-      aria-hidden="true"
-      className={["inline-block", colorClass, className].join(" ").trim()}
+      className={["inline-block", className, colorClass].join(" ").trim()}
       style={{
         WebkitMaskImage: `url(${url})`,
         maskImage: `url(${url})`,
@@ -184,6 +173,7 @@ function CategorySheet({
     return () => window.removeEventListener("keydown", onKey);
   }, [open, onClose]);
 
+  // NOTE: 기존 동작 유지(시트 열리면 바디 스크롤 잠금)
   useEffect(() => {
     if (!open) return;
     const prev = document.body.style.overflow;
@@ -203,56 +193,73 @@ function CategorySheet({
       onClick={onClose}
     >
       <div
-        className="fixed inset-x-0 bottom-0 z-[999] mx-auto w-full max-w-6xl rounded-t-3xl border border-neutral-200 bg-white p-4 shadow-[0_-20px_60px_rgba(0,0,0,0.25)]"
+        className="fixed inset-x-0 bottom-0 z-[999] mx-auto w-full max-w-6xl rounded-t-3xl border border-neutral-200 bg-white p-4 shadow-[0_-20px_60px_rgba(0,0,0,0.25)] max-h-[85vh] overflow-hidden"
+        style={{ paddingBottom: "calc(env(safe-area-inset-bottom) + 16px)" }}
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="mx-auto mb-3 h-1.5 w-12 rounded-full bg-neutral-200" />
+        <div className="flex max-h-[85vh] flex-col">
+          <div className="mx-auto mb-3 h-1.5 w-12 rounded-full bg-neutral-200" />
 
-        <div className="flex items-center justify-between gap-3">
-          <h2 className="text-base font-extrabold tracking-tight text-neutral-900">
-            Choose a category
-          </h2>
-          <button
-            onClick={onClose}
-            className="rounded-full border border-neutral-200 bg-white px-3 py-1.5 text-sm font-semibold text-neutral-900 hover:bg-neutral-50"
-            type="button"
+          <div className="flex items-center justify-between gap-3">
+            <h2 className="text-base font-extrabold tracking-tight text-neutral-900">
+              Choose a category
+            </h2>
+            <button
+              onClick={onClose}
+              className="rounded-full border border-neutral-200 bg-white px-3 py-1.5 text-sm font-semibold text-neutral-900 hover:bg-neutral-50"
+              type="button"
+            >
+              Close
+            </button>
+          </div>
+
+          {/* ✅ iPhone에서 잘림 방지: 목록 영역을 스크롤 컨테이너로 */}
+          <div
+            className="mt-4 flex-1 overflow-y-auto overscroll-contain pr-1"
+            style={{ WebkitOverflowScrolling: "touch" }}
           >
-            Close
-          </button>
+            <div className="grid gap-2">
+              {categories.map((c) => {
+                const isActive = c === active;
+                return (
+                  <button
+                    key={c}
+                    onClick={() => {
+                      onPick(c);
+                      onClose();
+                    }}
+                    className={[
+                      "flex items-center justify-between rounded-2xl border px-4 py-3 text-left transition",
+                      isActive
+                        ? "border-neutral-900 bg-white text-neutral-900"
+                        : "border-neutral-200 bg-white hover:bg-neutral-50",
+                    ].join(" ")}
+                    type="button"
+                  >
+                    <span className="flex min-w-0 items-center gap-3">
+                      <CategoryIcon
+                        c={c}
+                        className="h-5 w-5 shrink-0"
+                        colorClass="bg-neutral-900"
+                      />
+                      <span className="truncate text-sm font-extrabold">
+                        {categoryLabel(c)}
+                      </span>
+                    </span>
+
+                    {isActive && (
+                      <span className="text-xs font-extrabold opacity-70">Selected</span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          <p className="mt-4 text-xs text-neutral-500">
+            Tip: Use the floating button (after you scroll) to change categories anytime.
+          </p>
         </div>
-
-        <div className="mt-4 grid gap-2">
-          {categories.map((c) => {
-            const isActive = c === active;
-            return (
-              <button
-                key={c}
-                onClick={() => {
-                  onPick(c);
-                  onClose();
-                }}
-                className={[
-                  "flex items-center justify-between rounded-2xl border px-4 py-3 text-left transition",
-                  isActive
-                    ? "border-neutral-900 bg-white text-neutral-900"
-                    : "border-neutral-200 bg-white hover:bg-neutral-50",
-                ].join(" ")}
-                type="button"
-              >
-                <span className="flex min-w-0 items-center gap-3">
-                  <CategoryIcon c={c} className="h-5 w-5 shrink-0" colorClass="bg-neutral-900" />
-                  <span className="truncate text-sm font-extrabold">{categoryLabel(c)}</span>
-                </span>
-
-                {isActive && <span className="text-xs font-extrabold opacity-70">Selected</span>}
-              </button>
-            );
-          })}
-        </div>
-
-        <p className="mt-4 text-xs text-neutral-500">
-          Tip: Use the floating button (after you scroll) to change categories anytime.
-        </p>
       </div>
     </div>
   );
@@ -356,6 +363,9 @@ export default function Menu() {
   const [lightboxItem, setLightboxItem] = useState<Item | null>(null);
   const [showFloating, setShowFloating] = useState(false);
 
+  // ✅ 카테고리 변경 시 "시트가 닫힌 뒤" 최상단 이동을 보장하기 위한 플래그
+  const [pendingScrollTop, setPendingScrollTop] = useState(false);
+
   const list = useMemo(() => getItemsForCategory(active), [active]);
 
   useEffect(() => {
@@ -370,23 +380,21 @@ export default function Menu() {
     const w = window as WindowWithIdleCallback;
 
     if (typeof w.requestIdleCallback === "function") {
-      const id = w.requestIdleCallback(() => run(), { timeout: 700 });
+      const id = w.requestIdleCallback(() => run(), { timeout: 1200 });
       return () => w.cancelIdleCallback?.(id);
     }
 
-    const t = window.setTimeout(run, 120);
+    const t = window.setTimeout(run, 300);
     return () => window.clearTimeout(t);
   }, [active]);
 
   useEffect(() => {
-    const THRESHOLD = 180;
     let ticking = false;
 
     const update = () => {
-      const y = window.scrollY || document.documentElement.scrollTop || 0;
-      const next = y > THRESHOLD;
-      setShowFloating((prev) => (prev === next ? prev : next));
       ticking = false;
+      const y = window.scrollY || window.pageYOffset || 0;
+      setShowFloating(y > 180);
     };
 
     const onScroll = () => {
@@ -400,6 +408,20 @@ export default function Menu() {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
+  // ✅ 시트/라이트박스가 닫힌 후에만 스크롤을 수행 (iOS에서 안정적)
+  useEffect(() => {
+    if (!pendingScrollTop) return;
+
+    if (sheetOpen || lightboxItem) return;
+
+    const id = window.requestAnimationFrame(() => {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    });
+
+    setPendingScrollTop(false);
+    return () => window.cancelAnimationFrame(id);
+  }, [pendingScrollTop, sheetOpen, lightboxItem]);
+
   const canShowFloating = showFloating && !sheetOpen && !lightboxItem;
 
   const isBbqGroup =
@@ -410,6 +432,11 @@ export default function Menu() {
 
   const showMarketNote = isBbqGroup && list.some((x) => x.price.kind === "market");
 
+  const handlePickCategory = (c: Category) => {
+    setActive(c);
+    setPendingScrollTop(true);
+  };
+
   return (
     <div className="mx-auto max-w-6xl pt-2 pb-8 sm:px-4">
       <div className="flex items-start justify-between gap-4">
@@ -417,28 +444,19 @@ export default function Menu() {
           <h1 className="text-2xl font-extrabold tracking-tight text-neutral-900 sm:text-3xl">
             Menu
           </h1>
-          <p className="mt-1 text-sm font-semibold text-neutral-500">
-            Browse by category. Tap an item to view photo.
+          <p className="mt-1 text-sm font-semibold text-neutral-600 sm:text-base">
+            Tap any item to view photo.
           </p>
         </div>
-
-        <button
-          onClick={() => setSheetOpen(true)}
-          className="hidden items-center gap-2 rounded-full border border-neutral-200 bg-white px-4 py-2 text-sm font-extrabold text-neutral-900 shadow-sm hover:bg-neutral-50 sm:inline-flex"
-          type="button"
-        >
-          <CategoryIcon c={active} className="h-5 w-5 shrink-0" colorClass="bg-neutral-900" />
-          <span className="max-w-[24ch] truncate">{categoryLabel(active)}</span>
-          <ChevronDownIcon className="h-5 w-5 text-neutral-500" />
-        </button>
       </div>
 
+      {/* ✅ 상단 카테고리 버튼: DOM 제거 금지(레이아웃 시프트 방지) */}
       <div className="mt-5">
         <button
           onClick={() => setSheetOpen(true)}
           className={[
-            "flex w-full items-center justify-between rounded-2xl border border-neutral-200 bg-white px-4 py-3 text-left shadow-sm hover:bg-neutral-50",
-            // ✅ DOM 제거 대신 숨김 처리(공간 유지 → 스크롤 점프 방지)
+            "flex w-full items-center justify-between rounded-2xl border border-neutral-200 bg-white px-4 py-3 text-left shadow-sm transition hover:bg-neutral-50",
+            // showFloating일 때는 보이지 않게만 처리(공간 유지)
             showFloating ? "invisible pointer-events-none" : "visible",
           ].join(" ")}
           type="button"
@@ -458,84 +476,78 @@ export default function Menu() {
         </button>
       </div>
 
-
-      <div className="mt-4 grid grid-cols-2 gap-1 sm:mt-6 sm:gap-3 lg:grid-cols-3">
-        {list.map((m, idx) => (
+      <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
+        {list.map((m) => (
           <button
-            // ✅ key에서 idx 제거 (불필요한 리마운트/깜빡임 완화)
-            key={`${m.category}-${m.id}`}
-            onClick={() => {
-              preloadImage(m.image.src);
-              setLightboxItem(m);
-            }}
-            className="rounded-3xl border border-neutral-200 bg-white p-3 text-left shadow-sm transition hover:bg-neutral-50"
+            key={`${m.category}-${m.name}-${m.image.src}`}
+            onClick={() => setLightboxItem(m)}
+            className="group w-full overflow-hidden rounded-3xl border border-neutral-200 bg-white text-left shadow-sm transition"
             type="button"
           >
-            <div className="aspect-[4/3] overflow-hidden rounded-2xl">
+            <div className="aspect-[4/3] w-full overflow-hidden bg-white">
               <img
                 src={resolveSrc(m.image.src)}
                 alt={m.image.alt}
-                className="h-full w-full object-cover"
-                // ✅ 첫 화면에 주로 보이는 6개만 eager, 나머지 lazy
-                loading={idx < 6 ? "eager" : "lazy"}
+                className="h-full w-full object-contain"
+                loading="lazy"
                 decoding="async"
               />
             </div>
 
-            {/* ✅ 모바일: desc 아래 price(2줄) → price 아래 tags */}
-            <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between sm:gap-3">
-              {/* Left */}
-              <div className="min-w-0">
-                <h3 className="min-w-0 truncate text-sm font-extrabold leading-snug text-neutral-900 sm:text-base">
-                  {m.nameKo ?? m.name}
-                </h3>
+            <div className="p-4">
+              <div className="flex items-start justify-between gap-3">
+                {/* Left (name → desc) */}
+                <div className="min-w-0 flex-1">
+                  <h3 className="truncate text-base font-extrabold leading-snug text-neutral-900">
+                    {m.nameKo ?? m.name}
+                  </h3>
+                  {m.nameKo && (
+                    <p className="truncate text-xs font-semibold text-neutral-500">{m.name}</p>
+                  )}
 
-                {m.nameKo && (
-                  <p className="mt-0.5 block w-full truncate text-xs font-semibold text-neutral-500 sm:text-sm">
-                    {m.name}
-                  </p>
-                )}
+                  {m.desc && (
+                    <p className="mt-1 line-clamp-3 whitespace-pre-line text-xs leading-relaxed text-neutral-600 sm:text-sm">
+                      {m.desc}
+                    </p>
+                  )}
+                </div>
 
-                {m.desc && (
-                  <p className="mt-1 line-clamp-3 whitespace-pre-line text-xs leading-relaxed text-neutral-600 sm:text-sm">
-                    {m.desc}
-                  </p>
-                )}
+                {/* Right (price → tags) */}
+                <div className="mt-1 flex min-w-0 flex-col items-start gap-1 sm:mt-0 sm:items-end sm:text-right">
+                  <div className="text-sm font-extrabold text-neutral-900">
+                    {priceLabel(m.price)}
+                  </div>
+
+                  {priceSubLabel(m.price) && (
+                    <div className="text-xs font-semibold text-neutral-500">
+                      {priceSubLabel(m.price)}
+                    </div>
+                  )}
+
+                  {!!m.tags?.length && (
+                    <div className="mt-1 flex min-w-0 flex-wrap gap-1.5 sm:justify-end">
+                      {m.tags.map((t) => (
+                        <span
+                          key={t}
+                          className={[
+                            "max-w-full rounded-full px-2 py-0.5 text-[11px] font-extrabold",
+                            "overflow-hidden text-ellipsis whitespace-nowrap",
+                            t === "Best"
+                              ? "bg-amber-400 text-neutral-950"
+                              : "border border-neutral-200 bg-white text-neutral-700",
+                          ].join(" ")}
+                          title={t}
+                        >
+                          {t}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                </div>
               </div>
 
-              {/* Right (price → tags) */}
-              <div className="mt-1 flex min-w-0 flex-col items-start gap-1 sm:mt-0 sm:items-end sm:text-right">
-                <div className="text-sm font-extrabold text-neutral-900">{priceLabel(m.price)}</div>
-
-                {priceSubLabel(m.price) && (
-                  <div className="text-xs font-semibold text-neutral-500">
-                    {priceSubLabel(m.price)}
-                  </div>
-                )}
-
-                {!!m.tags?.length && (
-                  <div className="mt-1 flex min-w-0 flex-wrap gap-1.5 sm:justify-end">
-                    {m.tags.map((t) => (
-                      <span
-                        key={t}
-                        className={[
-                          "max-w-full rounded-full px-2 py-0.5 text-[11px] font-extrabold",
-                          "overflow-hidden text-ellipsis whitespace-nowrap",
-                          t === "Best"
-                            ? "bg-amber-400 text-neutral-950"
-                            : "border border-neutral-200 bg-white text-neutral-700",
-                        ].join(" ")}
-                        title={t}
-                      >
-                        {t}
-                      </span>
-                    ))}
-                  </div>
-                )}
-              </div>
+              <p className="mt-2 text-xs font-semibold text-neutral-500">Tap to view photo</p>
             </div>
-
-            <p className="mt-2 text-xs font-semibold text-neutral-500">Tap to view photo</p>
           </button>
         ))}
       </div>
@@ -553,7 +565,8 @@ export default function Menu() {
       {canShowFloating && (
         <button
           onClick={() => setSheetOpen(true)}
-          className="fixed bottom-5 right-5 z-[997] flex items-center gap-2 rounded-full border border-neutral-200 bg-white px-4 py-3 text-sm font-extrabold text-neutral-900 shadow-lg hover:bg-neutral-50"
+          className="fixed right-5 z-[997] flex items-center gap-2 rounded-full border border-neutral-200 bg-white px-4 py-3 text-sm font-extrabold text-neutral-900 shadow-lg hover:bg-neutral-50"
+          style={{ bottom: "calc(env(safe-area-inset-bottom) + 1.25rem)" }}
           aria-label="Change category"
           type="button"
         >
@@ -567,7 +580,7 @@ export default function Menu() {
         onClose={() => setSheetOpen(false)}
         categories={categories}
         active={active}
-        onPick={(c) => setActive(c)}
+        onPick={handlePickCategory}
       />
 
       <Lightbox open={!!lightboxItem} item={lightboxItem} onClose={() => setLightboxItem(null)} />
