@@ -44,35 +44,25 @@ type WindowWithIdleCallback = Window & {
 };
 
 /** Category icon SVG files (public/) */
+/** ✅ switch 제거(유니온 불일치 TS2678 방지): 문자열 키 매핑으로 처리 */
+const CATEGORY_ICON_MAP: Record<string, string> = {
+  All: "category-icons/all.svg",
+  "BEEF BBQ": "category-icons/beef-bbq.svg",
+  "PORK BBQ": "category-icons/pork-bbq.svg",
+  LIVE: "category-icons/live.svg",
+  "OTHER BBQ": "category-icons/other-bbq.svg",
+  HOTPOT: "category-icons/hotpot.svg",
+  "MEAT DISH": "category-icons/meat-dish.svg",
+  "SEAFOOD DISH": "category-icons/seafood-dish.svg",
+  "NOODLES & RICE": "category-icons/noodles-rice.svg",
+  "SIDE DISH": "category-icons/side-dish.svg",
+  "SOUP & STEW": "category-icons/soup-stew.svg",
+  "LUNCH SPECIAL": "category-icons/lunch-special.svg",
+};
+
 function categoryIconSrc(c: Category) {
-  switch (c) {
-    case "All":
-      return publicUrl("category-icons/all.svg");
-    case "BEEF BBQ":
-      return publicUrl("category-icons/beef-bbq.svg");
-    case "PORK BBQ":
-      return publicUrl("category-icons/pork-bbq.svg");
-    case "LIVE":
-      return publicUrl("category-icons/live.svg");
-    case "OTHER BBQ":
-      return publicUrl("category-icons/other-bbq.svg");
-    case "HOTPOT":
-      return publicUrl("category-icons/hotpot.svg");
-    case "MEAT DISH":
-      return publicUrl("category-icons/meat-dish.svg");
-    case "SEAFOOD DISH":
-      return publicUrl("category-icons/seafood-dish.svg");
-    case "NOODLES & RICE":
-      return publicUrl("category-icons/noodles-rice.svg");
-    case "SIDE DISH":
-      return publicUrl("category-icons/side-dish.svg");
-    case "SOUP & STEW":
-      return publicUrl("category-icons/soup-stew.svg");
-    case "LUNCH SPECIAL":
-      return publicUrl("category-icons/lunch-special.svg");
-    default:
-      return publicUrl("category-icons/all.svg");
-  }
+  const rel = CATEGORY_ICON_MAP[String(c)] ?? "category-icons/all.svg";
+  return publicUrl(rel);
 }
 
 function CategoryIcon({
@@ -223,7 +213,7 @@ function CategorySheet({
                 const isActive = c === active;
                 return (
                   <button
-                    key={c}
+                    key={String(c)}
                     onClick={() => {
                       onPick(c);
                       onClose();
@@ -237,7 +227,11 @@ function CategorySheet({
                     type="button"
                   >
                     <span className="flex min-w-0 items-center gap-3">
-                      <CategoryIcon c={c} className="h-5 w-5 shrink-0" colorClass="bg-neutral-900" />
+                      <CategoryIcon
+                        c={c}
+                        className="h-5 w-5 shrink-0"
+                        colorClass="bg-neutral-900"
+                      />
                       <span className="truncate text-sm font-extrabold">{categoryLabel(c)}</span>
                     </span>
 
@@ -362,12 +356,14 @@ export default function Menu() {
 
   const list = useMemo(() => getItemsForCategory(active), [active]);
 
+  // first paint preload (best-effort)
   useEffect(() => {
     const first = getItemsForCategory(active).map((x) => x.image.src);
     preloadImagesBatch(first, 8);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // preload for active category (idle)
   useEffect(() => {
     const srcs = getItemsForCategory(active).map((x) => x.image.src);
     const run = () => preloadImagesBatch(srcs, 10);
@@ -382,6 +378,7 @@ export default function Menu() {
     return () => window.clearTimeout(t);
   }, [active]);
 
+  // floating button visibility
   useEffect(() => {
     let ticking = false;
 
