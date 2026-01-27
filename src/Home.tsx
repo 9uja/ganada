@@ -178,7 +178,7 @@ function BannerCarousel({
   /**
    * ✅ 자동 슬라이드
    * - reduced-motion이면 자동 넘김 OFF
-   * - 비디오는 videoHoldMs(예: 8초) 머무르고 다음으로
+   * - 비디오는 videoHoldMs 만큼 머무르고 다음으로
    * - 이미지는 autoMs
    */
   useEffect(() => {
@@ -241,8 +241,8 @@ function BannerCarousel({
     // autoplay가 막힌 상태면 Tap to play 오버레이 노출
     const [autoplayBlocked, setAutoplayBlocked] = useState(false);
 
-    // 현재 muted 상태(토스트 문구용)
-    const [muted, setMuted] = useState(true);
+    // ✅ TS6133 fix: muted 값을 읽지 않으므로 첫 원소 생략
+    const [, setMuted] = useState(true);
 
     // ✅ “Sound on/off” 토스트: 기본 숨김, 탭 시 1초만 표시
     const [toastText, setToastText] = useState<"Sound on" | "Sound off" | null>(null);
@@ -279,7 +279,7 @@ function BannerCarousel({
           setAutoplayBlocked(true);
         });
       }
-    }, [isActive, shouldVideoFallback]);
+    }, [isActive, shouldVideoFallback, setMuted]);
 
     // ✅ reduced-motion / saveData → 의도적 이미지 fallback
     if (shouldVideoFallback) {
@@ -327,7 +327,6 @@ function BannerCarousel({
 
         setAutoplayBlocked(false);
         setMuted(true);
-        // 탭으로 재생 시작할 때도 “Sound off”를 1초 표시(원치 않으면 제거 가능)
         showToast("Sound off");
         return;
       }
@@ -615,9 +614,7 @@ function RecommendedMenuCarousel({
                     </div>
 
                     {m.nameKo && (
-                      <p className="truncate text-xl font-semibold text-neutral-500">
-                        {m.name}
-                      </p>
+                      <p className="truncate text-xl font-semibold text-neutral-500">{m.name}</p>
                     )}
                   </div>
                 </Link>
@@ -682,9 +679,7 @@ function RecommendedMenuCarousel({
                     </Link>
                   ))}
 
-                  {page.length === 1 && (
-                    <div className="rounded-3xl border border-transparent p-3" />
-                  )}
+                  {page.length === 1 && <div className="rounded-3xl border border-transparent p-3" />}
                 </div>
               </div>
             ))}
