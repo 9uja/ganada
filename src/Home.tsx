@@ -136,6 +136,9 @@ function BannerCarousel({
 }) {
   const [idx, setIdx] = useState(0);
 
+  // ✅ 슬라이드 자동 이동만 일시정지/재생
+  const [paused, setPaused] = useState(false);
+
   const touchStartX = useRef<number | null>(null);
   const touchDeltaX = useRef(0);
 
@@ -178,12 +181,14 @@ function BannerCarousel({
   /**
    * ✅ 자동 슬라이드
    * - reduced-motion이면 자동 넘김 OFF
-   * - 비디오는 videoHoldMs 만큼 머무르고 다음으로
+   * - paused면 자동 넘김 OFF
+   * - 비디오는 videoHoldMs 만큼 머무르고 다음으로 (paused는 비디오 재생/정지에 영향 없음)
    * - 이미지는 autoMs
    */
   useEffect(() => {
     if (slides.length <= 1) return;
     if (prefersReducedMotion) return;
+    if (paused) return;
 
     const dwellMs = isActiveVideo ? videoHoldMs : autoMs;
     const t = window.setTimeout(() => {
@@ -191,7 +196,7 @@ function BannerCarousel({
     }, dwellMs);
 
     return () => window.clearTimeout(t);
-  }, [slides.length, prefersReducedMotion, isActiveVideo, autoMs, videoHoldMs]);
+  }, [slides.length, prefersReducedMotion, isActiveVideo, autoMs, videoHoldMs, paused]);
 
   // keyboard
   useEffect(() => {
@@ -235,7 +240,112 @@ function BannerCarousel({
     return null;
   };
 
-  const VideoSlide = ({ s, isActive }: { s: Slide; isActive: boolean }) => {
+  // ✅ SVG icons
+  function ChevronIcon({
+    dir,
+    className = "",
+    size = 30,
+    strokeWidth = 4.6,
+  }: {
+    dir: "left" | "right";
+    className?: string;
+    size?: number;
+    strokeWidth?: number;
+  }) {
+    const d = dir === "left" ? "M16 5 L8 12 L16 19" : "M8 5 L16 12 L8 19";
+    return (
+      <svg
+        width={size}
+        height={size}
+        viewBox="0 0 24 24"
+        fill="none"
+        className={className}
+        aria-hidden="true"
+      >
+        <path
+          d={d}
+          stroke="currentColor"
+          strokeWidth={strokeWidth}
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      </svg>
+    );
+  }
+
+  // ✅ 막대 간격: 7 / 17 (더 쾅)
+  function PauseIcon({
+    className = "",
+    size = 28,
+    strokeWidth = 4.2,
+  }: {
+    className?: string;
+    size?: number;
+    strokeWidth?: number;
+  }) {
+    return (
+      <svg
+        width={size}
+        height={size}
+        viewBox="0 0 24 24"
+        fill="none"
+        className={className}
+        aria-hidden="true"
+      >
+        <path
+          d="M7 5 V19"
+          stroke="currentColor"
+          strokeWidth={strokeWidth}
+          strokeLinecap="round"
+        />
+        <path
+          d="M17 5 V19"
+          stroke="currentColor"
+          strokeWidth={strokeWidth}
+          strokeLinecap="round"
+        />
+      </svg>
+    );
+  }
+
+  function PlayIcon({
+    className = "",
+    size = 42,
+  }: {
+    className?: string;
+    size?: number;
+  }) {
+    return (
+      <svg
+        width={size}
+        height={size}
+        viewBox="0 0 24 24"
+        className={className}
+        aria-hidden="true"
+      >
+        <path
+          d="
+            M8.3 6.6
+            C8.3 5.8 9.2 5.3 10.0 5.8
+            L19.0 10.9
+            C19.9 11.4 19.9 12.6 19.0 13.1
+            L10.0 18.2
+            C9.2 18.7 8.3 18.2 8.3 17.4
+            Z
+            "
+          fill="currentColor"
+        />
+      </svg>
+    );
+  }
+
+  const VideoSlide = ({
+    s,
+    isActive,
+  }: {
+    s: Slide;
+    isActive: boolean;
+  }) => {
     const ref = useRef<HTMLVideoElement | null>(null);
 
     // autoplay가 막힌 상태면 Tap to play 오버레이 노출
@@ -260,7 +370,7 @@ function BannerCarousel({
       };
     }, []);
 
-    // ✅ 활성 슬라이드에서만 autoplay 시도
+    // ✅ 활성 슬라이드에서만 autoplay 시도 (paused와 무관)
     useEffect(() => {
       if (!isActive) return;
       if (shouldVideoFallback) return;
@@ -268,16 +378,13 @@ function BannerCarousel({
       const el = ref.current;
       if (!el) return;
 
-      // autoplay 안정화 기본
       el.muted = true;
       el.playsInline = true;
       setMuted(true);
 
       const p = el.play();
       if (p && typeof p.catch === "function") {
-        p.catch(() => {
-          setAutoplayBlocked(true);
-        });
+        p.catch(() => setAutoplayBlocked(true));
       }
     }, [isActive, shouldVideoFallback, setMuted]);
 
@@ -320,9 +427,7 @@ function BannerCarousel({
 
         const p = el.play();
         if (p && typeof p.catch === "function") {
-          p.catch(() => {
-            setAutoplayBlocked(true);
-          });
+          p.catch(() => setAutoplayBlocked(true));
         }
 
         setAutoplayBlocked(false);
@@ -371,9 +476,7 @@ function BannerCarousel({
 
         <video
           key={`video-${s.id}-${idx}`}
-          ref={(el) => {
-            ref.current = el;
-          }}
+          ref={ref}
           className="h-full w-full object-cover"
           poster={s.poster ? publicUrl(s.poster) : undefined}
           autoPlay
@@ -389,6 +492,18 @@ function BannerCarousel({
       </div>
     );
   };
+
+  // ✅ 컨트롤 버튼 공통 스타일 (54x54, 어두운 회색 원형)
+  const baseBtn =
+    "w-[42px] h-[42px] sm:w-[54px] sm:h-[54px] " +
+    "rounded-full bg-neutral-800 flex items-center justify-center select-none " +
+    "transition active:scale-[0.98] hover:opacity-95 " +
+    "focus:outline-none focus-visible:ring-4 focus-visible:ring-white/15";
+
+  // ✅ 색상 규칙
+  const iconLeft = "text-blue-500"; // <
+  const iconMid = "text-red-500"; // ⏸ / ▶
+  const iconRight = "text-yellow-400"; // >
 
   return (
     <section
@@ -430,6 +545,24 @@ function BannerCarousel({
                     isActiveSlide ? "opacity-100" : "opacity-0 pointer-events-none",
                   ].join(" ")}
                 >
+                  {/* ✅ Full-banner click (image slides only) */}
+                  {active?.type === "image" && (active.to || active.href) ? (
+                    active.to ? (
+                      <Link
+                        to={active.to}
+                        aria-label={`Go to ${active.alt ?? "banner link"}`}
+                        className="absolute inset-0 z-10"
+                      />
+                    ) : (
+                      <a
+                        href={active.href}
+                        target="_blank"
+                        rel="noreferrer"
+                        aria-label={`Open ${active.alt ?? "banner link"}`}
+                        className="absolute inset-0 z-10"
+                      />
+                    )
+                  ) : null}
                   {s.type === "video" ? (
                     <VideoSlide s={s} isActive={isActiveSlide} />
                   ) : (
@@ -460,6 +593,52 @@ function BannerCarousel({
               <div className="pointer-events-auto">
                 <CarouselNavButton ariaLabel="Next banner" onClick={next} size="lg" />
               </div>
+            </div>
+
+            {/* ✅ Bottom-right controls: SVG chevrons + pause/play (autoslide only) */}
+            <div className="absolute bottom-4 left-1/2 translate-x-[30px] sm:translate-x-[220px] lg:translate-x-[320px] z-20 flex gap-3 pointer-events-auto">
+              {/* < prev */}
+              <button
+                type="button"
+                aria-label="Previous slide"
+                className={baseBtn}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  prev();
+                }}
+              >
+                <ChevronIcon dir="left" className={iconLeft} />
+              </button>
+
+              {/* ⏸ / ▶ */}
+              <button
+                type="button"
+                aria-label={paused ? "Play slideshow" : "Pause slideshow"}
+                className={baseBtn}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setPaused((v) => !v);
+                }}
+              >
+                {paused ? (
+                  <PlayIcon className={iconMid} />
+                ) : (
+                  <PauseIcon className={iconMid} />
+                )}
+              </button>
+
+              {/* > next */}
+              <button
+                type="button"
+                aria-label="Next slide"
+                className={baseBtn}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  next();
+                }}
+              >
+                <ChevronIcon dir="right" className={iconRight} />
+              </button>
             </div>
 
             {/* CTA (비디오 슬라이드에서는 숨김) */}
@@ -614,7 +793,9 @@ function RecommendedMenuCarousel({
                     </div>
 
                     {m.nameKo && (
-                      <p className="truncate text-xl font-semibold text-neutral-500">{m.name}</p>
+                      <p className="truncate text-xl font-semibold text-neutral-500">
+                        {m.name}
+                      </p>
                     )}
                   </div>
                 </Link>
@@ -679,7 +860,9 @@ function RecommendedMenuCarousel({
                     </Link>
                   ))}
 
-                  {page.length === 1 && <div className="rounded-3xl border border-transparent p-3" />}
+                  {page.length === 1 && (
+                    <div className="rounded-3xl border border-transparent p-3" />
+                  )}
                 </div>
               </div>
             ))}
@@ -704,7 +887,6 @@ export default function Home() {
         src: "home/banners/01.mp4",
         poster: "home/banners/01.webp",
         alt: "Banner video",
-        // ✅ 링크 제거: to/href/ctaLabel 없음
       },
       {
         id: "b2",
@@ -712,15 +894,13 @@ export default function Home() {
         src: "home/banners/02.webp",
         alt: "Banner 2",
         to: "/menu",
-        ctaLabel: "Menu",
       },
       {
         id: "b3",
         type: "image",
         src: "home/banners/03.webp",
         alt: "Banner 3",
-        href: "https://wa.me/600328566183",
-        ctaLabel: "WhatsApp",
+        to: "/menu",
       },
     ],
     []
