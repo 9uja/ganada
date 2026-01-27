@@ -130,7 +130,7 @@ type Slide = {
 function BannerCarousel({
   slides,
   autoMs = 5200,
-  videoHoldMs = 30000,
+  videoHoldMs = 9000,
 }: {
   slides: Slide[];
   autoMs?: number;
@@ -674,7 +674,7 @@ export default function Home() {
   return (
     <div className="space-y-8">
       <FullBleed>
-        <BannerCarousel slides={slides} autoMs={5200} videoHoldMs={30000} />
+        <BannerCarousel slides={slides} autoMs={5200} videoHoldMs={9000} />
       </FullBleed>
 
       {/* ✅ 추천메뉴만 변경됨 */}
