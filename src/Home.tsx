@@ -53,7 +53,6 @@ function CarouselNavButton({
       className={[
         "inline-flex items-center justify-center rounded-full",
         sizeClass,
-        // circle hidden + no icon
         "bg-transparent border border-transparent shadow-none",
         "transition active:scale-[0.98] hover:opacity-90",
         "focus:outline-none focus-visible:ring-4 focus-visible:ring-neutral-900/15",
@@ -75,7 +74,6 @@ function usePrefersReducedMotion() {
     const apply = () => setReduced(!!mq.matches);
     apply();
 
-    // Safari 구버전 대응
     if ("addEventListener" in mq) {
       mq.addEventListener("change", apply);
       return () => mq.removeEventListener("change", apply);
@@ -142,12 +140,12 @@ function BannerCarousel({
   const touchDeltaX = useRef(0);
 
   const prefersReducedMotion = usePrefersReducedMotion();
-  const isMobileSm = useIsMobileSm(); // (디버그/표시용으로 남겨도 되지만, fallback 조건에는 쓰지 않음)
+  const isMobileSm = useIsMobileSm(); // (디버그/진단용으로 남겨도 됨)
 
   const active = slides[idx];
   const isActiveVideo = active?.type === "video";
 
-  // ✅ 디버그: 주소창에 ?debugVideo=1 붙이면 controls 표시
+  // ✅ 디버그: 주소창에 ?debugVideo=1
   const debugVideo =
     typeof window !== "undefined" &&
     new URLSearchParams(window.location.search).has("debugVideo");
@@ -161,9 +159,9 @@ function BannerCarousel({
 
   /**
    * ✅ 핵심:
-   * - 모바일(DevTools 모바일 포함)에서는 "isMobileSm" 때문에 video가 안 보이는 문제가 자주 발생.
-   * - 따라서 fallback은 reduced-motion 또는 saveData일 때만.
-   * - debugVideo면 fallback 금지.
+   * - DevTools 모바일 뷰에서도 video가 렌더되도록 isMobileSm는 fallback에 쓰지 않음
+   * - reduced-motion 또는 saveData일 때만 fallback
+   * - debugVideo면 fallback 금지
    */
   const shouldVideoFallback = (prefersReducedMotion || saveData) && !debugVideo;
 
@@ -207,6 +205,9 @@ function BannerCarousel({
   }, [idx, slides.length]);
 
   const Cta = ({ className = "" }: { className?: string }) => {
+    // ✅ 비디오 슬라이드에서는 링크/CTA 제거
+    if (active?.type === "video") return null;
+
     if (!active?.ctaLabel) return null;
     const common =
       "inline-flex items-center justify-center rounded-full px-5 py-3 text-sm font-extrabold shadow-sm transition hover:opacity-95 " +
@@ -237,10 +238,29 @@ function BannerCarousel({
   const VideoSlide = ({ s, isActive }: { s: Slide; isActive: boolean }) => {
     const ref = useRef<HTMLVideoElement | null>(null);
 
-    // ✅ autoplay가 막히면 이미지로 바꾸지 말고 controls로 전환 (모바일 정책 대응)
+    // autoplay가 막힌 상태면 Tap to play 오버레이 노출
     const [autoplayBlocked, setAutoplayBlocked] = useState(false);
 
-    // ✅ 활성 슬라이드에서만 재생 시도
+    // 현재 muted 상태(토스트 문구용)
+    const [muted, setMuted] = useState(true);
+
+    // ✅ “Sound on/off” 토스트: 기본 숨김, 탭 시 1초만 표시
+    const [toastText, setToastText] = useState<"Sound on" | "Sound off" | null>(null);
+    const toastTimer = useRef<number | null>(null);
+
+    const showToast = (text: "Sound on" | "Sound off") => {
+      setToastText(text);
+      if (toastTimer.current) window.clearTimeout(toastTimer.current);
+      toastTimer.current = window.setTimeout(() => setToastText(null), 1000);
+    };
+
+    useEffect(() => {
+      return () => {
+        if (toastTimer.current) window.clearTimeout(toastTimer.current);
+      };
+    }, []);
+
+    // ✅ 활성 슬라이드에서만 autoplay 시도
     useEffect(() => {
       if (!isActive) return;
       if (shouldVideoFallback) return;
@@ -248,8 +268,10 @@ function BannerCarousel({
       const el = ref.current;
       if (!el) return;
 
+      // autoplay 안정화 기본
       el.muted = true;
       el.playsInline = true;
+      setMuted(true);
 
       const p = el.play();
       if (p && typeof p.catch === "function") {
@@ -287,38 +309,94 @@ function BannerCarousel({
       );
     }
 
-    // ✅ debugVideo면 항상 controls, autoplayBlocked면 controls로 수동재생 유도
-    const showControls = debugVideo || autoplayBlocked;
+    const onTap = () => {
+      const el = ref.current;
+      if (!el) return;
+
+      // 1) 재생이 멈춰있거나 autoplay가 막혔으면: 먼저 재생 시도 (무음)
+      if (el.paused || autoplayBlocked) {
+        el.muted = true;
+        el.playsInline = true;
+
+        const p = el.play();
+        if (p && typeof p.catch === "function") {
+          p.catch(() => {
+            setAutoplayBlocked(true);
+          });
+        }
+
+        setAutoplayBlocked(false);
+        setMuted(true);
+        // 탭으로 재생 시작할 때도 “Sound off”를 1초 표시(원치 않으면 제거 가능)
+        showToast("Sound off");
+        return;
+      }
+
+      // 2) 재생 중이면: 음소거 토글
+      const nextMuted = !el.muted;
+      el.muted = nextMuted;
+      setMuted(nextMuted);
+      showToast(nextMuted ? "Sound off" : "Sound on");
+    };
+
+    const showPlayOverlay = autoplayBlocked;
 
     return (
-      <video
-        key={`video-${s.id}-${idx}`}
-        ref={(el) => {
-          ref.current = el;
-        }}
-        className="h-full w-full object-cover"
-        poster={s.poster ? publicUrl(s.poster) : undefined}
-        autoPlay
-        muted
-        loop
-        playsInline
-        preload="auto"
-        controls={showControls}
-        // autoplayBlocked 상태에서 사용자가 눌러 재생하면 상태 복구 (선택)
-        onPlay={() => setAutoplayBlocked(false)}
-      >
-        <source src={publicUrl(s.src)} type="video/mp4" />
-      </video>
+      <div className="relative h-full w-full">
+        {/* ✅ 클릭 영역: 재생(필요시) 또는 음소거 토글 */}
+        <button
+          type="button"
+          className="absolute inset-0 z-10"
+          aria-label="Play video or toggle sound"
+          onClick={onTap}
+          style={{ background: "transparent" }}
+        >
+          {/* Tap to play 오버레이 */}
+          {showPlayOverlay ? (
+            <div className="absolute inset-0 flex items-center justify-center bg-black/20">
+              <div className="rounded-full bg-black/60 px-6 py-3 text-sm font-extrabold text-white">
+                Tap to play
+              </div>
+            </div>
+          ) : null}
+
+          {/* ✅ Sound 토스트: 탭 시 1초만 */}
+          {toastText ? (
+            <div className="pointer-events-none absolute bottom-4 left-4">
+              <div className="rounded-full bg-black/60 px-4 py-2 text-xs font-extrabold text-white">
+                {toastText}
+              </div>
+            </div>
+          ) : null}
+        </button>
+
+        <video
+          key={`video-${s.id}-${idx}`}
+          ref={(el) => {
+            ref.current = el;
+          }}
+          className="h-full w-full object-cover"
+          poster={s.poster ? publicUrl(s.poster) : undefined}
+          autoPlay
+          muted
+          loop
+          playsInline
+          preload="auto"
+          onPlaying={() => setAutoplayBlocked(false)}
+          onPause={() => setAutoplayBlocked(true)}
+        >
+          <source src={publicUrl(s.src)} type="video/mp4" />
+        </video>
+      </div>
     );
   };
 
-  // 최상단 배너 캐러셀
   return (
     <section
       className="bg-neutral-950"
       aria-roledescription="carousel"
       aria-label="Top banners"
-      data-mobile={isMobileSm ? "1" : "0"} // (디버그용, 필요 없으면 제거 가능)
+      data-mobile={isMobileSm ? "1" : "0"} // 디버그용
     >
       <div className="mx-auto">
         <div className="relative overflow-hidden rounded-none">
@@ -343,29 +421,28 @@ function BannerCarousel({
             }}
           >
             {slides.map((s, i) => {
-              const isActive = i === idx;
+              const isActiveSlide = i === idx;
               return (
                 <div
                   key={s.id}
                   className={[
                     "absolute inset-0",
                     prefersReducedMotion ? "" : "transition-opacity duration-500",
-                    isActive ? "opacity-100" : "opacity-0 pointer-events-none",
+                    isActiveSlide ? "opacity-100" : "opacity-0 pointer-events-none",
                   ].join(" ")}
                 >
                   {s.type === "video" ? (
-                    <VideoSlide s={s} isActive={isActive} />
+                    <VideoSlide s={s} isActive={isActiveSlide} />
                   ) : (
                     <img
                       src={publicUrl(s.src)}
                       alt={s.alt ?? ""}
                       className="h-full w-full object-cover"
-                      loading={isActive ? "eager" : "lazy"}
+                      loading={isActiveSlide ? "eager" : "lazy"}
                       decoding="async"
                       draggable={false}
                       onError={(e) => {
-                        (e.currentTarget as HTMLImageElement).style.display =
-                          "none";
+                        (e.currentTarget as HTMLImageElement).style.display = "none";
                       }}
                     />
                   )}
@@ -378,11 +455,7 @@ function BannerCarousel({
             {/* prev/next (icon removed) */}
             <div className="pointer-events-none absolute inset-0 flex items-center justify-between px-3 sm:px-5">
               <div className="pointer-events-auto">
-                <CarouselNavButton
-                  ariaLabel="Previous banner"
-                  onClick={prev}
-                  size="lg"
-                />
+                <CarouselNavButton ariaLabel="Previous banner" onClick={prev} size="lg" />
               </div>
 
               <div className="pointer-events-auto">
@@ -390,7 +463,7 @@ function BannerCarousel({
               </div>
             </div>
 
-            {/* CTA만 유지 */}
+            {/* CTA (비디오 슬라이드에서는 숨김) */}
             <div className="absolute bottom-0 left-0 right-0">
               <div className="mx-auto flex max-w-6xl justify-end px-4 pb-4 pt-3 sm:pb-5">
                 <Cta />
@@ -411,7 +484,7 @@ function BannerCarousel({
  */
 function RecommendedMenuCarousel({
   list,
-  autoMs = 3000, // ✅ 초당 n번 자동 슬라이드
+  autoMs = 3000,
 }: {
   list: Item[];
   autoMs?: number;
@@ -462,7 +535,6 @@ function RecommendedMenuCarousel({
   const prevDesktop = () => goDesktop(dPage - 1);
   const nextDesktop = () => goDesktop(dPage + 1);
 
-  // 데스크탑 자동 슬라이드: 페이지 단위(=2개씩 이동)
   useEffect(() => {
     if (pages.length <= 1) return;
     const t = window.setInterval(() => {
@@ -471,7 +543,6 @@ function RecommendedMenuCarousel({
     return () => window.clearInterval(t);
   }, [pages.length, autoMs]);
 
-  // list/paging 변경 시 index 안전 보정
   useEffect(() => {
     if (mIdx >= list.length) setMIdx(0);
   }, [list.length, mIdx]);
@@ -482,16 +553,11 @@ function RecommendedMenuCarousel({
 
   return (
     <section className="bg-white p-6 shadow-sm sm:p-8">
-      {/* ✅ 헤더: 버튼 유무와 관계없이 제목을 '화면 기준 정중앙'으로 고정 */}
       <div className="grid items-center gap-3 sm:grid-cols-[1fr_auto_1fr]">
-        {/* left spacer (desktop에서만 균형용) */}
         <div className="hidden sm:block" />
-
         <h2 className="text-center text-2xl font-extrabold tracking-tight text-neutral-900 sm:text-2xl">
           RECOMMENDED
         </h2>
-
-        {/* Desktop buttons (icon removed) - 제거 금지 */}
         <div className="hidden items-center justify-end gap-2 sm:flex">
           <CarouselNavButton ariaLabel="이전" onClick={prevDesktop} size="sm" />
           <CarouselNavButton ariaLabel="다음" onClick={nextDesktop} size="sm" />
@@ -560,7 +626,6 @@ function RecommendedMenuCarousel({
           </div>
         </div>
 
-        {/* 모바일 좌/우 버튼 유지 (제거 금지) */}
         <div className="pointer-events-none absolute inset-y-0 left-0 right-0 z-10 flex items-center justify-between">
           <div className="pointer-events-auto -translate-x-[40%]">
             <CarouselNavButton ariaLabel="이전" onClick={prevMobile} size="sm" />
@@ -617,7 +682,6 @@ function RecommendedMenuCarousel({
                     </Link>
                   ))}
 
-                  {/* 홀수 개수 보정(2칸 유지) */}
                   {page.length === 1 && (
                     <div className="rounded-3xl border border-transparent p-3" />
                   )}
@@ -633,9 +697,9 @@ function RecommendedMenuCarousel({
 
 export default function Home() {
   /**
-   * ✅ 슬라이드 예시
-   * - video는 poster를 꼭 넣는 것을 권장 (autoplay blocked 시에도 poster가 유용)
-   * - public/home/banners/ 아래에 파일을 두면 됨
+   * ✅ 파일 위치 (Vite public)
+   * - public/home/banners/01.mp4
+   * - public/home/banners/01.webp (poster 권장)
    */
   const slides: Slide[] = useMemo(
     () => [
@@ -643,9 +707,9 @@ export default function Home() {
         id: "b1",
         type: "video",
         src: "home/banners/01.mp4",
-        poster: "home/banners/01.webp", // 또는 poster 이미지 파일
+        poster: "home/banners/01.webp",
         alt: "Banner video",
-        to: "/promos",
+        // ✅ 링크 제거: to/href/ctaLabel 없음
       },
       {
         id: "b2",
@@ -653,19 +717,20 @@ export default function Home() {
         src: "home/banners/02.webp",
         alt: "Banner 2",
         to: "/menu",
+        ctaLabel: "Menu",
       },
       {
         id: "b3",
         type: "image",
         src: "home/banners/03.webp",
         alt: "Banner 3",
-        to: "/menu",
+        href: "https://wa.me/600328566183",
+        ctaLabel: "WhatsApp",
       },
     ],
     []
   );
 
-  // RECOMMENDED tagged items auto
   const bestList = useMemo(() => {
     const best = items.filter((it) => it.tags?.includes("RECOMMENDED"));
     return best.length > 0 ? best : items.slice(0, 10);
@@ -677,10 +742,9 @@ export default function Home() {
         <BannerCarousel slides={slides} autoMs={5200} videoHoldMs={9000} />
       </FullBleed>
 
-      {/* ✅ 추천메뉴만 변경됨 */}
       <RecommendedMenuCarousel list={bestList} autoMs={3000} />
 
-      <section className="grid gap-3 sm:grid-cols-3 px-6">
+      <section className="grid gap-3 sm:grid-cols-3">
         <Link
           to="/menu"
           className="group rounded-3xl border border-neutral-200 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"

@@ -279,6 +279,7 @@ export const items: Item[] = [
     nameKo: "소꼬리탕",
     name: "SOKKORI TANG",
     desc: "Oxtail and beef bone soup",
+    tags: ["RECOMMENDED"],
     image: { src: publicUrl("menu/stew/sokkori-tang.webp"), alt: "SOKKORI TANG" },
     price: { kind: "fixed", rm: 45 },
   },
