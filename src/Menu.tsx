@@ -793,11 +793,11 @@ export default function Menu() {
             <div className={["rounded-3xl p-[1px] shadow-sm transition group-hover:shadow-lg", cardTriBorder].join(" ")}>
               {/* ✅ 실제 카드 */}
               <div className="relative overflow-hidden rounded-3xl bg-white">
-                <div className="relative aspect-[4/3] w-full overflow-hidden bg-white p-2 pt-3">
+                <div className="relative w-full aspect-[4/3] overflow-hidden bg-white p-2 pt-3">
                   <img
                     src={resolveSrc(m.image.src)}
                     alt={m.image.alt}
-                    className="h-full w-full object-contain"
+                    className="max-h-full max-w-full h-auto w-auto object-contain"
                     loading="lazy"
                     decoding="async"
                     data-menu-img="1"
