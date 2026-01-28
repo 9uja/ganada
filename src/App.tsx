@@ -402,11 +402,10 @@ export default function App() {
                 {/* 2) Middle: quick links */}
                 <div className="border-t border-white/10 pt-5">
                   <div className="text-xs font-bold uppercase tracking-wider text-neutral-300">
-                    가나다 | 대표: 윤선규 | 전화주문: +60 3-2856 6183
+                    Ganada | Owner: Seonkyu Yoon | Tel: +60 3-2856 6183
                   </div>
                 </div>
 
-                {/* 3) Right: policy + whatsapp */}
                 <div className="border-t border-white/10 pt-3">
                   <div className="space-y-1">
                     <div>

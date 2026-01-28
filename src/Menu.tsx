@@ -434,15 +434,6 @@ export default function Menu() {
     });
   };
 
-  const removeFromCart = (id: string) => {
-    setCart((prev) => {
-      if (!(id in prev)) return prev;
-      const next = { ...prev };
-      delete next[id];
-      return next;
-    });
-  };
-
   const clearCart = () => {
     if (Object.keys(cart).length === 0) return;
     const ok = window.confirm("Clear cart?");
