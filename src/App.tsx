@@ -402,7 +402,7 @@ export default function App() {
                 {/* 2) Middle: quick links */}
                 <div className="border-t border-white/10 pt-5">
                   <div className="text-xs font-bold uppercase tracking-wider text-neutral-300">
-                    Ganada | Owner: Seonkyu Yoon | Tel: +60 3-2856 6183
+                    Ganada | Tel: +60 3-2856 6183
                   </div>
                 </div>
 

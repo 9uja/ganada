@@ -122,6 +122,8 @@ type Slide = {
   href?: string; // external
   to?: string; // internal
   ctaLabel?: string;
+  /** object-position e.g. "50% 40%" */
+  focus?: string;
 };
 
 /** Top banner carousel */
@@ -546,19 +548,19 @@ function BannerCarousel({
                   ].join(" ")}
                 >
                   {/* ✅ Full-banner click (image slides only) */}
-                  {active?.type === "image" && (active.to || active.href) ? (
-                    active.to ? (
+                  {isActiveSlide && s.type === "image" && (s.to || s.href) ? (
+                    s.to ? (
                       <Link
-                        to={active.to}
-                        aria-label={`Go to ${active.alt ?? "banner link"}`}
+                        to={s.to}
+                        aria-label={`Go to ${s.alt ?? "banner link"}`}
                         className="absolute inset-0 z-10"
                       />
                     ) : (
                       <a
-                        href={active.href}
+                        href={s.href}
                         target="_blank"
                         rel="noreferrer"
-                        aria-label={`Open ${active.alt ?? "banner link"}`}
+                        aria-label={`Open ${s.alt ?? "banner link"}`}
                         className="absolute inset-0 z-10"
                       />
                     )
@@ -585,7 +587,7 @@ function BannerCarousel({
             })}
 
             {/* prev/next (icon removed) */}
-            <div className="pointer-events-none absolute inset-0 flex items-center justify-between px-3 sm:px-5">
+            <div className="pointer-events-none absolute inset-0 z-20 flex items-center justify-between px-3 sm:px-5">
               <div className="pointer-events-auto">
                 <CarouselNavButton ariaLabel="Previous banner" onClick={prev} size="lg" />
               </div>
@@ -642,7 +644,7 @@ function BannerCarousel({
             </div>
 
             {/* CTA (비디오 슬라이드에서는 숨김) */}
-            <div className="absolute bottom-0 left-0 right-0">
+            <div className="absolute bottom-0 left-0 right-0 z-20 pointer-events-auto">
               <div className="mx-auto flex max-w-6xl justify-end px-4 pb-4 pt-3 sm:pb-5">
                 <Cta />
               </div>
@@ -874,37 +876,82 @@ function RecommendedMenuCarousel({
 }
 
 export default function Home() {
+  const isMobileSm = useIsMobileSm();
+
   /**
-   * ✅ 파일 위치 (Vite public)
-   * - public/home/banners/01.mp4
-   * - public/home/banners/01.webp (poster 권장)
+   * ✅ 배너 파일 위치 (Vite public)
+   * - 데스크톱:
+   *   - public/home/banners/desktop/01.mp4
+   *   - public/home/banners/desktop/01.webp (poster)
+   *   - public/home/banners/desktop/02.webp
+   *   - public/home/banners/desktop/03.webp
+   * - 모바일:
+   *   - public/home/banners/mobile/01.mp4
+   *   - public/home/banners/mobile/01.webp (poster)
+   *   - public/home/banners/mobile/02.webp
+   *   - public/home/banners/mobile/03.webp
    */
-  const slides: Slide[] = useMemo(
+
+  const slidesDesktop: Slide[] = useMemo(
     () => [
       {
-        id: "b1",
+        id: "b1-d",
         type: "video",
-        src: "home/banners/01.mp4",
-        poster: "home/banners/01.webp",
-        alt: "Banner video",
+        src: "home/banners/desktop/01.mp4",
+        poster: "home/banners/desktop/01.webp",
+        alt: "Banner video (desktop)",
+        focus: "50% 45%",
       },
       {
-        id: "b2",
+        id: "b2-d",
         type: "image",
-        src: "home/banners/02.webp",
-        alt: "Banner 2",
+        src: "home/banners/desktop/02.webp",
+        alt: "Banner 2 (desktop)",
         to: "/menu",
+        focus: "50% 50%",
       },
       {
-        id: "b3",
+        id: "b3-d",
         type: "image",
-        src: "home/banners/03.webp",
-        alt: "Banner 3",
+        src: "home/banners/desktop/03.webp",
+        alt: "Banner 3 (desktop)",
         to: "/menu",
+        focus: "50% 50%",
       },
     ],
     []
   );
+
+  const slidesMobile: Slide[] = useMemo(
+    () => [
+      {
+        id: "b1-m",
+        type: "video",
+        src: "home/banners/mobile/01.mp4",
+        poster: "home/banners/mobile/01.webp",
+        focus: "50% 35%",
+      },
+      {
+        id: "b2-m",
+        type: "image",
+        src: "home/banners/mobile/02.webp",
+        alt: "Banner 2 (mobile)",
+        to: "/menu",
+        focus: "50% 45%",
+      },
+      {
+        id: "b3-m",
+        type: "image",
+        src: "home/banners/mobile/03.webp",
+        alt: "Banner 3 (mobile)",
+        to: "/menu",
+        focus: "50% 45%",
+      },
+    ],
+    []
+  );
+
+  const slides = isMobileSm ? slidesMobile : slidesDesktop;
 
   const bestList = useMemo(() => {
     const best = items.filter((it) => it.tags?.includes("RECOMMENDED"));
