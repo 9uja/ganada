@@ -895,7 +895,7 @@ export default function Menu() {
       </div>
 
       {showMarketNote && (
-        <p className="mt-6 px-2 text-xs leading-relaxed text-neutral-100 sm:px-6">
+        <p className="mt-6 px-2 text-xs leading-relaxed text-neutral-600 sm:px-6">
           BBQ items may be market price. Please ask our staff for today&apos;s price.
           <br />
           • All prices are subjected to 10% service charge.

@@ -900,7 +900,7 @@ export default function Home() {
         src: "home/banners/desktop/01.mp4",
         poster: "home/banners/desktop/01.webp",
         alt: "Banner video (desktop)",
-        focus: "50% 45%",
+        focus: "50% 50%",
       },
       {
         id: "b2-d",
@@ -929,7 +929,7 @@ export default function Home() {
         type: "video",
         src: "home/banners/mobile/01.mp4",
         poster: "home/banners/mobile/01.webp",
-        focus: "50% 35%",
+        focus: "50% 50%",
       },
       {
         id: "b2-m",
@@ -937,7 +937,7 @@ export default function Home() {
         src: "home/banners/mobile/02.webp",
         alt: "Banner 2 (mobile)",
         to: "/menu",
-        focus: "50% 45%",
+        focus: "50% 50%",
       },
       {
         id: "b3-m",
@@ -945,7 +945,7 @@ export default function Home() {
         src: "home/banners/mobile/03.webp",
         alt: "Banner 3 (mobile)",
         to: "/menu",
-        focus: "50% 45%",
+        focus: "50% 50%",
       },
     ],
     []
