@@ -877,7 +877,6 @@ function RecommendedMenuCarousel({
 
 export default function Home() {
   const isMobileSm = useIsMobileSm();
-
   /**
    * ✅ 배너 파일 위치 (Vite public)
    * - 데스크톱:
@@ -957,7 +956,6 @@ export default function Home() {
     const best = items.filter((it) => it.tags?.includes("RECOMMENDED"));
     return best.length > 0 ? best : items.slice(0, 10);
   }, []);
-
   return (
     <div className="space-y-8">
       <FullBleed>
