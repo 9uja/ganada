@@ -598,51 +598,58 @@ function BannerCarousel({
             </div>
 
             {/* ✅ Bottom-right controls: SVG chevrons + pause/play (autoslide only) */}
-            <div className="absolute bottom-4 left-1/2 translate-x-[30px] sm:translate-x-[220px] lg:translate-x-[320px] z-20 flex gap-3 pointer-events-auto">
-              {/* < prev */}
-              <button
-                type="button"
-                aria-label="Previous slide"
-                className={baseBtn}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  prev();
-                }}
-              >
-                <ChevronIcon dir="left" className={iconLeft} />
-              </button>
+<div className="pointer-events-none absolute inset-0 z-30">
+  <div className="pointer-events-none mx-auto h-full max-w-6xl px-4 relative">
+    <div
+      className={[
+        "pointer-events-auto absolute z-30 flex gap-3",
+        "right-[clamp(10px,1.6vw,20px)]",
+        "pr-[env(safe-area-inset-right)]",
+        "bottom-[clamp(12px,2vw,24px)]",
+        "pb-[env(safe-area-inset-bottom)]",
+      ].join(" ")}
+    >
+      {/* < prev */}
+      <button
+        type="button"
+        aria-label="Previous slide"
+        className={baseBtn}
+        onClick={(e) => {
+          e.stopPropagation();
+          prev();
+        }}
+      >
+        <ChevronIcon dir="left" className={iconLeft} />
+      </button>
 
-              {/* ⏸ / ▶ */}
-              <button
-                type="button"
-                aria-label={paused ? "Play slideshow" : "Pause slideshow"}
-                className={baseBtn}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setPaused((v) => !v);
-                }}
-              >
-                {paused ? (
-                  <PlayIcon className={iconMid} />
-                ) : (
-                  <PauseIcon className={iconMid} />
-                )}
-              </button>
+      {/* ⏸ / ▶ */}
+      <button
+        type="button"
+        aria-label={paused ? "Play slideshow" : "Pause slideshow"}
+        className={baseBtn}
+        onClick={(e) => {
+          e.stopPropagation();
+          setPaused((v) => !v);
+        }}
+      >
+        {paused ? <PlayIcon className={iconMid} /> : <PauseIcon className={iconMid} />}
+      </button>
 
-              {/* > next */}
-              <button
-                type="button"
-                aria-label="Next slide"
-                className={baseBtn}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  next();
-                }}
-              >
-                <ChevronIcon dir="right" className={iconRight} />
-              </button>
-            </div>
-
+      {/* > next */}
+      <button
+        type="button"
+        aria-label="Next slide"
+        className={baseBtn}
+        onClick={(e) => {
+          e.stopPropagation();
+          next();
+        }}
+      >
+        <ChevronIcon dir="right" className={iconRight} />
+      </button>
+    </div>
+  </div>
+</div>
             {/* CTA (비디오 슬라이드에서는 숨김) */}
             <div className="absolute bottom-0 left-0 right-0 z-20 pointer-events-auto">
               <div className="mx-auto flex max-w-6xl justify-end px-4 pb-4 pt-3 sm:pb-5">
