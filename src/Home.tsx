@@ -932,9 +932,10 @@ export default function Home() {
     () => [
       {
         id: "b1-m",
-        type: "video",
-        src: "home/banners/mobile/01.mp4",
-        poster: "home/banners/mobile/01.webp",
+        type: "image",
+        src: "home/banners/mobile/01.webp",
+        alt: "Banner 1 (mobile)",
+        to: "/menu",
         focus: "50% 50%",
       },
       {
