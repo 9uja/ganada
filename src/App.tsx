@@ -1,13 +1,235 @@
 // src/App.tsx
 import { Link, NavLink, Route, Routes, useLocation } from "react-router-dom";
 import { useEffect, useRef, useState, type ReactNode } from "react";
+
 import Home from "./Home";
 import Menu from "./Menu";
 import Promos from "./Promos";
 import Contact from "./Contact";
 
+/**
+ * ✅ Router는 main.tsx에서만 1번 감싼다.
+ * - App.tsx에서는 BrowserRouter/RouteTracker를 절대 넣지 않는다.
+ */
+export default function App() {
+  return <AppShell />;
+}
+
+/** 실제 UI/라우팅은 AppShell에서 담당 */
+function AppShell() {
+  const isQr = useIsQrMenuMode();
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
+
+  // Mobile nav open: disable auto-hide (prevents header disappearing)
+  const hideHeader = useAutoHideHeader(!isQr && !mobileNavOpen);
+  const { pathname } = useLocation();
+
+  // Close mobile menu on route change
+  useEffect(() => {
+    setMobileNavOpen(false);
+  }, [pathname]);
+
+  // ESC to close + body scroll lock
+  useEffect(() => {
+    if (!mobileNavOpen) return;
+
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setMobileNavOpen(false);
+    };
+
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    window.addEventListener("keydown", onKey);
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      document.body.style.overflow = prev;
+    };
+  }, [mobileNavOpen]);
+
+  // Reduce excessive top padding on /menu (it felt too tall)
+  const mainClass = isQr
+    ? "px-4 py-5"
+    : pathname === "/"
+      ? "px-0 py-0"
+      : pathname === "/menu"
+        ? "pb-0 sm:pt-0"
+        : "px-4 py-10";
+
+  return (
+    <div className="min-h-dvh bg-white text-neutral-900">
+      {/* Header hidden in QR menu mode */}
+      {!isQr && (
+        <header
+          className={[
+            "sticky top-0 z-50 bg-white/90 backdrop-blur",
+            "border-b border-neutral-200",
+            "transition-transform duration-200 will-change-transform",
+            hideHeader ? "-translate-y-full" : "translate-y-0",
+          ].join(" ")}
+        >
+          {/* thin brand strip */}
+          <div className="flex h-1.5 w-full">
+            <div className="h-full w-1/2 bg-blue-600" />
+            <div className="h-full w-1/4 bg-red-600" />
+            <div className="h-full w-1/4 bg-amber-400" />
+          </div>
+
+          {/* Header body: larger */}
+          <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 lg:h-[80px]">
+            {/* Left: Logo */}
+            <Link to="/" className="flex items-center gap-3">
+              <img
+                src={publicUrl("brand/logo-mark.svg")}
+                alt="GANADA"
+                className="h-12 w-12 bg-white"
+                loading="eager"
+                decoding="async"
+              />
+            </Link>
+
+            {/* Center: Desktop nav */}
+            <nav className="hidden h-full items-stretch gap-10 md:flex">
+              <DesktopNavLink to="/">Home</DesktopNavLink>
+              <DesktopNavLink to="/menu">Menu</DesktopNavLink>
+              <DesktopNavLink to="/promos">Promos</DesktopNavLink>
+              <DesktopNavLink to="/contact">Contact</DesktopNavLink>
+            </nav>
+
+            {/* Right: utilities */}
+            <div className="flex items-center gap-2">
+              {/* Desktop */}
+              <div className="hidden items-center gap-2 md:flex">
+                <a
+                  className="inline-flex h-10 items-center justify-center rounded-full px-5 text-base font-extrabold text-white transition-opacity hover:opacity-90"
+                  style={{ backgroundColor: "#25D366" }}
+                  href="tel:+60328566183"
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  Call to order
+                </a>
+              </div>
+
+              {/* Mobile hamburger */}
+              <button
+                type="button"
+                className={[
+                  "group inline-flex h-12 w-12 items-center justify-center rounded-2xl",
+                  "bg-white text-neutral-800",
+                  "ring-0 ring-neutral-200 shadow-sm",
+                  "transition-all duration-200 ease-out",
+                  "active:scale-[0.98]",
+                  "md:hidden",
+                ].join(" ")}
+                aria-label={mobileNavOpen ? "Close menu" : "Open menu"}
+                onClick={() => setMobileNavOpen((v) => !v)}
+              >
+                <AnimatedMenuIcon
+                  open={mobileNavOpen}
+                  className="h-10 w-10"
+                  strokeWidth={2.8}
+                  gap={5}
+                />
+              </button>
+            </div>
+          </div>
+
+          {/* Mobile nav */}
+          {mobileNavOpen && (
+            <div className="border-t border-neutral-200 bg-white px-4 pb-4 md:hidden">
+              <div className="mx-auto max-w-6xl py-3">
+                <nav className="grid gap-2">
+                  <NavLink className={mobileNavItem} to="/">
+                    Home
+                  </NavLink>
+                  <NavLink className={mobileNavItem} to="/menu">
+                    Menu
+                  </NavLink>
+                  <NavLink className={mobileNavItem} to="/promos">
+                    Promos
+                  </NavLink>
+                  <NavLink className={mobileNavItem} to="/contact">
+                    Contact
+                  </NavLink>
+                </nav>
+
+                <a
+                  className="mt-4 inline-flex h-12 w-full items-center justify-center rounded-2xl text-base font-extrabold text-white transition-opacity hover:opacity-90"
+                  style={{ backgroundColor: "#25D366" }}
+                  href="tel:+60328566183"
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  Call to order
+                </a>
+              </div>
+            </div>
+          )}
+        </header>
+      )}
+
+      <main className={mainClass}>
+        <ContentWrap isQr={isQr} pathname={pathname}>
+          <Routes>
+            <Route path="/" element={<Home />} />
+            <Route path="/menu" element={<Menu />} />
+            <Route path="/promos" element={<Promos />} />
+            <Route path="/contact" element={<Contact />} />
+          </Routes>
+        </ContentWrap>
+      </main>
+
+      {!isQr && (
+        <footer className="bg-neutral-800 px-4 py-6 text-sm text-neutral-100">
+          <div className="mx-auto max-w-6xl">
+            <div className="grid gap-2">
+              {/* 1) Left: logo -> home */}
+              <div className="flex flex-col gap-2">
+                <Link to="/" aria-label="Go to home" className="block w-fit">
+                  <img
+                    src={publicUrl("/brand/logo-mark.svg")}
+                    alt="GANADA"
+                    className="h-12 w-12 bg-white"
+                    loading="eager"
+                    decoding="async"
+                  />
+                </Link>
+              </div>
+
+              {/* 2) Middle */}
+              <div className="border-t border-white/10 pt-5">
+                <div className="text-xs font-bold uppercase tracking-wider text-neutral-300">
+                  Ganada | Tel: +60 3-2856 6183
+                </div>
+              </div>
+
+              {/* 3) Right */}
+              <div className="border-t border-white/10 pt-3">
+                <div className="space-y-1">
+                  <div>
+                    <div className="mb-2 text-xs font-bold uppercase tracking-wider text-neutral-300">
+                      GANADA Korean BBQ Restaurant
+                    </div>
+                    <div className="text-neutral-300">Malaysia</div>
+                    <div className="pt-2 text-xs text-neutral-400">
+                      COPYRIGHT © {new Date().getFullYear()} ALL RIGHTS RESERVED
+                      BY GANADA&apos;s.
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </footer>
+      )}
+    </div>
+  );
+}
+
 /** GitHub Pages(예: /menu/)에서도 public 파일이 깨지지 않게 base를 자동 반영 */
-const publicUrl = (p: string) => `${import.meta.env.BASE_URL}${p.replace(/^\/+/, "")}`;
+const publicUrl = (p: string) =>
+  `${import.meta.env.BASE_URL}${p.replace(/^\/+/, "")}`;
 
 function useIsQrMenuMode() {
   const { pathname, search } = useLocation();
@@ -85,12 +307,6 @@ function useAutoHideHeader(enabled: boolean) {
   return hidden;
 }
 
-/**
- * ✅ 중요: App() 내부에서 ContentWrap을 선언하면
- * App이 리렌더링될 때마다 ContentWrap "타입"이 바뀌어
- * 하위 트리가 언마운트/리마운트 됩니다.
- * (Menu state가 스크롤 시 All로 리셋되던 핵심 원인)
- */
 function ContentWrap({
   isQr,
   pathname,
@@ -106,12 +322,6 @@ function ContentWrap({
 }
 
 /** --- icons --- */
-/**
- * ✅ 브랜딩 고정 버전
- * - hover 시 배경/텍스트만 반전(버튼 배경은 dark)
- * - 아이콘 3색(파/빨/노)은 hover/open 상태에서도 유지
- * - open 시 햄버거 → X로 모핑(색은 그대로)
- */
 function AnimatedMenuIcon({
   className = "",
   open,
@@ -127,10 +337,9 @@ function AnimatedMenuIcon({
   const yMid = 12;
   const yBot = 12 + gap;
 
-  // Tailwind 의존 제거(항상 보이게): 직접 색 지정
-  const BLUE = "#2563EB"; // blue-600
-  const RED = "#DC2626"; // red-600
-  const AMBER = "#FBBF24"; // amber-400
+  const BLUE = "#2563EB";
+  const RED = "#DC2626";
+  const AMBER = "#FBBF24";
 
   const base = "transition-all duration-200 ease-out origin-center";
   const common = {
@@ -141,7 +350,6 @@ function AnimatedMenuIcon({
 
   return (
     <svg viewBox="0 0 24 24" className={className} fill="none" aria-hidden="true">
-      {/* CLOSED LAYER (3 lines) */}
       <g
         className={base}
         style={{
@@ -154,7 +362,6 @@ function AnimatedMenuIcon({
         <path d={`M4 ${yBot}h16`} stroke={AMBER} {...common} />
       </g>
 
-      {/* OPEN LAYER (X: blue + red) */}
       <g
         className={base}
         style={{
@@ -197,7 +404,6 @@ function DesktopNavLink({ to, children }: { to: string; children: ReactNode }) {
   );
 }
 
-// McD-like: bigger + bolder header nav
 const desktopNavItem = ({ isActive }: { isActive: boolean }) =>
   [
     "text-2xl font-extrabold tracking-tight transition",
@@ -211,219 +417,3 @@ const mobileNavItem = ({ isActive }: { isActive: boolean }) =>
       ? "bg-amber-400 text-neutral-950 ring-1 ring-amber-500 shadow-sm"
       : "text-neutral-900 hover:bg-neutral-50",
   ].join(" ");
-
-export default function App() {
-  const isQr = useIsQrMenuMode();
-  const [mobileNavOpen, setMobileNavOpen] = useState(false);
-
-  // Mobile nav open: disable auto-hide (prevents header disappearing)
-  const hideHeader = useAutoHideHeader(!isQr && !mobileNavOpen);
-  const { pathname } = useLocation();
-
-  // Close mobile menu on route change
-  useEffect(() => {
-    setMobileNavOpen(false);
-  }, [pathname]);
-
-  // ESC to close + body scroll lock
-  useEffect(() => {
-    if (!mobileNavOpen) return;
-
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setMobileNavOpen(false);
-    };
-
-    const prev = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-
-    window.addEventListener("keydown", onKey);
-    return () => {
-      window.removeEventListener("keydown", onKey);
-      document.body.style.overflow = prev;
-    };
-  }, [mobileNavOpen]);
-
-  // Reduce excessive top padding on /menu (it felt too tall)
-  const mainClass = isQr
-    ? "px-4 py-5"
-    : pathname === "/"
-      ? "px-0 py-0"
-      : pathname === "/menu"
-        ? "pb-0 sm:pt-0"
-        : "px-4 py-10";
-
-  return (
-    <div className="min-h-dvh bg-white text-neutral-900">
-      {/* Header hidden in QR menu mode */}
-      {!isQr && (
-        <header
-          className={[
-            "sticky top-0 z-50 bg-white/90 backdrop-blur",
-            "border-b border-neutral-200",
-            "transition-transform duration-200 will-change-transform",
-            hideHeader ? "-translate-y-full" : "translate-y-0",
-          ].join(" ")}
-        >
-          {/* thin brand strip */}
-          <div className="flex h-1.5 w-full">
-            <div className="h-full w-1/2 bg-blue-600" />
-            <div className="h-full w-1/4 bg-red-600" />
-            <div className="h-full w-1/4 bg-amber-400" />
-          </div>
-
-          {/* Header body: larger */}
-          <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 lg:h-[80px]">
-
-            {/* Left: Logo */}
-            <Link to="/" className="flex items-center gap-3">
-              <img
-                src={publicUrl("brand/logo-mark.svg")}
-                alt="GANADA"
-                className="h-12 w-12 bg-white"
-                loading="eager"
-                decoding="async"
-              />
-            </Link>
-
-            {/* Center: Desktop nav */}
-            <nav className="hidden h-full items-stretch gap-10 md:flex">
-              <DesktopNavLink to="/">Home</DesktopNavLink>
-              <DesktopNavLink to="/menu">Menu</DesktopNavLink>
-              <DesktopNavLink to="/promos">Promos</DesktopNavLink>
-              <DesktopNavLink to="/contact">Contact</DesktopNavLink>
-            </nav>
-
-
-            {/* Right: utilities */}
-            <div className="flex items-center gap-2">
-              {/* Desktop */}
-              <div className="hidden items-center gap-2 md:flex">
-                <a
-                  className="inline-flex h-10 items-center justify-center rounded-full px-5 text-base font-extrabold text-white transition-opacity hover:opacity-90"
-                  style={{ backgroundColor: "#25D366" }}
-                  href="tel:+60328566183"
-                  target="_blank"
-                  rel="noreferrer"
-                >
-                  Call to order
-                </a>
-              </div>
-
-              {/* Mobile hamburger */}
-              <button
-                type="button"
-                className={[
-                  // ✅ hover 시 "배경만" 반전(다크), 아이콘 3색은 그대로 유지
-                  "group inline-flex h-12 w-12 items-center justify-center rounded-2xl",
-                  "bg-white text-neutral-800",
-                  "ring-0 ring-neutral-200 shadow-sm",
-                  "transition-all duration-200 ease-out",
-                  "active:scale-[0.98]",
-                  "md:hidden",
-                ].join(" ")}
-                aria-label={mobileNavOpen ? "Close menu" : "Open menu"}
-                onClick={() => setMobileNavOpen((v) => !v)}
-              >
-                <AnimatedMenuIcon
-                  open={mobileNavOpen}
-                  className="h-10 w-10"
-                  // 조절 포인트
-                  strokeWidth={2.8}
-                  gap={5}
-                />
-              </button>
-            </div>
-          </div>
-
-          {/* Mobile nav */}
-          {mobileNavOpen && (
-            <div className="border-t border-neutral-200 bg-white px-4 pb-4 md:hidden">
-              <div className="mx-auto max-w-6xl py-3">
-                <nav className="grid gap-2">
-                  <NavLink className={mobileNavItem} to="/">
-                    Home
-                  </NavLink>
-                  <NavLink className={mobileNavItem} to="/menu">
-                    Menu
-                  </NavLink>
-                  <NavLink className={mobileNavItem} to="/promos">
-                    Promos
-                  </NavLink>
-                  <NavLink className={mobileNavItem} to="/contact">
-                    Contact
-                  </NavLink>
-                </nav>
-
-                <a
-                  className="mt-4 inline-flex h-12 w-full items-center justify-center rounded-2xl text-base font-extrabold text-white transition-opacity hover:opacity-90"
-                  style={{ backgroundColor: "#25D366" }}
-                  href="tel:+60328566183"
-                  target="_blank"
-                  rel="noreferrer"
-                > 
-                  Call to order
-                </a>
-              </div>
-            </div>
-          )}
-        </header>
-      )}
-
-      <main className={mainClass}>
-        <ContentWrap isQr={isQr} pathname={pathname}>
-          <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/menu" element={<Menu />} />
-            <Route path="/promos" element={<Promos />} />
-            <Route path="/contact" element={<Contact />} />
-          </Routes>
-        </ContentWrap>
-      </main>
-
-        {!isQr && (
-          <footer className="bg-neutral-800 px-4 py-6 text-sm text-neutral-100">
-            <div className="mx-auto max-w-6xl">
-              {/* 3 columns */}
-              <div className="grid gap-2">
-                {/* 1) Left: logo -> home (헤더 로고와 동일한 형태) */}
-                <div className="flex flex-col gap-2">
-                  <Link to="/" aria-label="Go to home" className="block w-fit">
-                    {/* 헤더에서 쓰는 로고와 동일 */}
-                    <img
-                      src={publicUrl("/brand/logo-mark.svg")} // ✅ 헤더에서 쓰는 경로/함수 그대로 사용
-                      alt="GANADA"
-                      className="h-12 w-12 bg-white"
-                      loading="eager"
-                      decoding="async"
-                    />
-                  </Link>
-                </div>
-
-                {/* 2) Middle: quick links */}
-                <div className="border-t border-white/10 pt-5">
-                  <div className="text-xs font-bold uppercase tracking-wider text-neutral-300">
-                    Ganada | Tel: +60 3-2856 6183
-                  </div>
-                </div>
-
-                <div className="border-t border-white/10 pt-3">
-                  <div className="space-y-1">
-                    <div>
-                      <div className="mb-2 text-xs font-bold uppercase tracking-wider text-neutral-300">
-                        GANADA Korean BBQ Restaurant
-                      </div>
-                      <div className="text-neutral-300">Malaysia</div>
-                      <div className="pt-2 text-xs text-neutral-400">
-                        COPYRIGHT © {new Date().getFullYear()} ALL RIGHTS RESERVED BY GANADA's.
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </footer>
-        )}
-
-    </div>
-  );
-}
