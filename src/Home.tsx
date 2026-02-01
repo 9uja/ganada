@@ -946,14 +946,6 @@ export default function Home() {
         to: "/menu",
         focus: "50% 50%",
       },
-      {
-        id: "b3-m",
-        type: "image",
-        src: "home/banners/mobile/03.webp",
-        alt: "Banner 3 (mobile)",
-        to: "/menu",
-        focus: "50% 50%",
-      },
     ],
     []
   );
