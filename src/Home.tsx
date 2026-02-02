@@ -129,8 +129,8 @@ type Slide = {
 /** Top banner carousel */
 function BannerCarousel({
   slides,
-  autoMs = 5200,
-  videoHoldMs = 9000,
+  autoMs = 3000,
+  videoHoldMs = 8000,
 }: {
   slides: Slide[];
   autoMs?: number;
@@ -932,10 +932,9 @@ export default function Home() {
     () => [
       {
         id: "b1-m",
-        type: "image",
-        src: "home/banners/mobile/01.webp",
-        alt: "Banner 1 (mobile)",
-        to: "/menu",
+        type: "video",
+        src: "home/banners/mobile/01.mp4",
+        poster: "home/banners/mobile/01.webp",
         focus: "50% 50%",
       },
       {
@@ -943,6 +942,14 @@ export default function Home() {
         type: "image",
         src: "home/banners/mobile/02.webp",
         alt: "Banner 2 (mobile)",
+        to: "/menu",
+        focus: "50% 50%",
+      },
+      {
+        id: "b3-m",
+        type: "image",
+        src: "home/banners/mobile/03.webp",
+        alt: "Banner 3 (mobile)",
         to: "/menu",
         focus: "50% 50%",
       },
@@ -959,7 +966,7 @@ export default function Home() {
   return (
     <div className="space-y-8">
       <FullBleed>
-        <BannerCarousel slides={slides} autoMs={5200} videoHoldMs={9000} />
+        <BannerCarousel slides={slides} autoMs={3000} videoHoldMs={8000} />
       </FullBleed>
 
       <RecommendedMenuCarousel list={bestList} autoMs={3000} />
