@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "clsx": "^2.1.1",
+    "flubber": "^0.4.2",
     "framer-motion": "^12.24.8",
     "lucide-react": "^0.562.0",
     "react": "^19.2.0",

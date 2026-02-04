@@ -2,6 +2,11 @@
 import { Link } from "react-router-dom";
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { items, type Item } from "./menuData";
+import LogoMorph from "./components/LogoMorph";
+
+
+// Intro overlay should run once per JS runtime (F5 resets)
+let __ganadaIntroShownThisRuntime = false;
 
 /** GitHub Pages(예: /menu/)에서도 public 파일이 깨지지 않게 base를 자동 반영 */
 const publicUrl = (p: string) => `${import.meta.env.BASE_URL}${p.replace(/^\/+/, "")}`;
@@ -884,6 +889,7 @@ function RecommendedMenuCarousel({
 
 export default function Home() {
   const isMobileSm = useIsMobileSm();
+  const [showIntro, setShowIntro] = useState(() => !__ganadaIntroShownThisRuntime);
   /**
    * ✅ 배너 파일 위치 (Vite public)
    * - 데스크톱:
@@ -964,7 +970,17 @@ export default function Home() {
     return best.length > 0 ? best : items.slice(0, 10);
   }, []);
   return (
-    <div className="space-y-8">
+    <>
+      {showIntro && (
+        <LogoMorph
+          onDone={() => {
+            __ganadaIntroShownThisRuntime = true;
+            setShowIntro(false);
+          }}
+        />
+      )}
+
+      <div className="space-y-8">
       <FullBleed>
         <BannerCarousel slides={slides} autoMs={3000} videoHoldMs={8000} />
       </FullBleed>
@@ -1008,5 +1024,6 @@ export default function Home() {
 
       <div className="h-6" />
     </div>
+    </>
   );
 }
