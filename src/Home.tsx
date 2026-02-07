@@ -585,8 +585,6 @@ function BannerCarousel({
                       }}
                     />
                   )}
-
-                  <div className="absolute inset-0 bg-gradient-to-r from-black/35 via-black/10 to-black/15" />
                 </div>
               );
             })}
@@ -908,10 +906,10 @@ export default function Home() {
     () => [
       {
         id: "b1-d",
-        type: "video",
-        src: "home/banners/desktop/01.mp4",
-        poster: "home/banners/desktop/01.webp",
-        alt: "Banner video (desktop)",
+        type: "image",
+        src: "home/banners/desktop/01.webp",
+        alt: "Banner 1 (desktop)",
+        to: "/menu",
         focus: "50% 50%",
       },
       {
@@ -938,9 +936,10 @@ export default function Home() {
     () => [
       {
         id: "b1-m",
-        type: "video",
-        src: "home/banners/mobile/01.mp4",
-        poster: "home/banners/mobile/01.webp",
+        type: "image",
+        src: "home/banners/mobile/01.webp",
+        alt: "Banner 1 (mobile)",
+        to: "/menu",
         focus: "50% 50%",
       },
       {
@@ -956,6 +955,14 @@ export default function Home() {
         type: "image",
         src: "home/banners/mobile/03.webp",
         alt: "Banner 3 (mobile)",
+        to: "/menu",
+        focus: "50% 50%",
+      },
+      {
+        id: "b4-m",
+        type: "image",
+        src: "home/banners/mobile/04.webp",
+        alt: "Banner 4 (mobile)",
         to: "/menu",
         focus: "50% 50%",
       },
