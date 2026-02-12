@@ -136,15 +136,44 @@ function BannerCarousel({
   slides,
   autoMs = 3000,
   videoHoldMs = 8000,
+  holdFirst = false,
 }: {
   slides: Slide[];
   autoMs?: number;
   videoHoldMs?: number;
+  /** When true (e.g., LogoMorph running), force the first slide and stop auto/manual navigation. */
+  holdFirst?: boolean;
 }) {
   const [idx, setIdx] = useState(0);
 
   // ✅ 슬라이드 자동 이동만 일시정지/재생
   const [paused, setPaused] = useState(false);
+
+  // ✅ holdFirst(예: LogoMorph 진행 중) 동안: 첫 슬라이드 고정 + 자동/수동 이동 정지
+  // - hold 진입 전 paused 상태를 저장했다가, hold 해제 시 복원
+  const holdStored = useRef(false);
+  const pausedBeforeHold = useRef(false);
+
+  useEffect(() => {
+    if (!holdFirst) {
+      if (holdStored.current) {
+        holdStored.current = false;
+        setPaused(pausedBeforeHold.current);
+      }
+      return;
+    }
+
+    if (!holdStored.current) {
+      pausedBeforeHold.current = paused;
+      holdStored.current = true;
+    }
+
+    // 첫 슬라이드로 강제 고정
+    if (idx !== 0) setIdx(0);
+
+    // 자동 슬라이드 정지
+    if (!paused) setPaused(true);
+  }, [holdFirst, idx, paused]);
 
   const touchStartX = useRef<number | null>(null);
   const touchDeltaX = useRef(0);
@@ -176,6 +205,7 @@ function BannerCarousel({
   const shouldVideoFallback = (prefersReducedMotion || saveData) && !debugVideo;
 
   const go = (next: number) => {
+    if (holdFirst) return;
     const n = slides.length;
     if (n === 0) return;
     const v = ((next % n) + n) % n;
@@ -193,6 +223,7 @@ function BannerCarousel({
    * - 이미지는 autoMs
    */
   useEffect(() => {
+    if (holdFirst) return;
     if (slides.length <= 1) return;
     if (prefersReducedMotion) return;
     if (paused) return;
@@ -203,20 +234,23 @@ function BannerCarousel({
     }, dwellMs);
 
     return () => window.clearTimeout(t);
-  }, [slides.length, prefersReducedMotion, isActiveVideo, autoMs, videoHoldMs, paused]);
+  }, [holdFirst, idx, slides.length, prefersReducedMotion, isActiveVideo, autoMs, videoHoldMs, paused]);
 
   // keyboard
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
+      if (holdFirst) return;
       if (e.key === "ArrowLeft") prev();
       if (e.key === "ArrowRight") next();
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [idx, slides.length]);
+  }, [idx, slides.length, holdFirst]);
 
   const Cta = ({ className = "" }: { className?: string }) => {
+    // ✅ holdFirst 동안은 CTA 숨김
+    if (holdFirst) return null;
     // ✅ 비디오 슬라이드에서는 링크/CTA 제거
     if (active?.type === "video") return null;
 
@@ -533,6 +567,11 @@ function BannerCarousel({
               touchDeltaX.current = x - touchStartX.current;
             }}
             onTouchEnd={() => {
+              if (holdFirst) {
+                touchStartX.current = null;
+                touchDeltaX.current = 0;
+                return;
+              }
               const dx = touchDeltaX.current;
               touchStartX.current = null;
               touchDeltaX.current = 0;
@@ -553,7 +592,7 @@ function BannerCarousel({
                   ].join(" ")}
                 >
                   {/* ✅ Full-banner click (image slides only) */}
-                  {isActiveSlide && s.type === "image" && (s.to || s.href) ? (
+                  {isActiveSlide && !holdFirst && s.type === "image" && (s.to || s.href) ? (
                     s.to ? (
                       <Link
                         to={s.to}
@@ -989,7 +1028,7 @@ export default function Home() {
 
       <div className="space-y-8">
       <FullBleed>
-        <BannerCarousel slides={slides} autoMs={3000} videoHoldMs={8000} />
+        <BannerCarousel slides={slides} autoMs={3000} videoHoldMs={8000} holdFirst={showIntro} />
       </FullBleed>
 
       <RecommendedMenuCarousel list={bestList} autoMs={3000} />
