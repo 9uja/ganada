@@ -92,7 +92,7 @@ function AppShell() {
             <nav className="hidden h-full items-stretch gap-10 md:flex">
               <DesktopNavLink to="/">Home</DesktopNavLink>
               <DesktopNavLink to="/menu">Menu</DesktopNavLink>
-              <DesktopNavLink to="/promos">Promos</DesktopNavLink>
+              <DesktopNavLink to="/promos">Promotion</DesktopNavLink>
               <DesktopNavLink to="/contact">Contact</DesktopNavLink>
             </nav>
 
@@ -147,7 +147,7 @@ function AppShell() {
                     Menu
                   </NavLink>
                   <NavLink className={mobileNavItem} to="/promos">
-                    Promos
+                    Promotion
                   </NavLink>
                   <NavLink className={mobileNavItem} to="/contact">
                     Contact
@@ -174,7 +174,7 @@ function AppShell() {
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/menu" element={<Menu />} />
-            <Route path="/promos" element={<Promos />} />
+            <Route path="/Promos" element={<Promos />} />
             <Route path="/contact" element={<Contact />} />
           </Routes>
         </ContentWrap>

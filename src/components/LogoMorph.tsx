@@ -64,22 +64,11 @@ function easeInOutCubic(t: number) {
 }
 
 export default function LogoMorph({ onDone, logoSrc = "/logo-mark.svg", wordmarkSrc = "/ganada-wordmark.png" }: Props) {
-  const [phase, setPhase] = useState<Phase>("textPop");
+  // Phase is derived from `now` (time) to avoid setState loops.
   const [now, setNow] = useState(0);
   const raf = useRef<number | null>(null);
+  const doneCalledRef = useRef(false);
 
-  // drive time
-  useEffect(() => {
-    const start = performance.now();
-    const tick = (t: number) => {
-      setNow(t - start);
-      raf.current = requestAnimationFrame(tick);
-    };
-    raf.current = requestAnimationFrame(tick);
-    return () => {
-      if (raf.current) cancelAnimationFrame(raf.current);
-    };
-  }, []);
 
   // timeline (ms)
   const T1 = 450; // text pop
@@ -90,19 +79,55 @@ export default function LogoMorph({ onDone, logoSrc = "/logo-mark.svg", wordmark
   const T6 = 720; // doors open
   const total = T1 + T2 + T3 + T4 + T5 + T6;
 
+  // drive time (requestAnimationFrame)
+  // - StrictMode(dev)에서 effect가 2번 실행되는 경우에도 안전
+  // - done(총 시간) 이후에는 rAF를 중단해 불필요한 state 업데이트를 막음
   useEffect(() => {
+    let mounted = true;
+    const start = performance.now();
+
+    const tick = (t: number) => {
+      if (!mounted) return;
+
+      const next = t - start;
+
+      // 총 타임라인이 끝나면 마지막 값으로 고정 후 루프 종료
+      if (next >= total) {
+        setNow(total);
+        return;
+      }
+
+      setNow(next);
+      raf.current = requestAnimationFrame(tick);
+    };
+
+    raf.current = requestAnimationFrame(tick);
+
+    return () => {
+      mounted = false;
+      if (raf.current) cancelAnimationFrame(raf.current);
+      raf.current = null;
+    };
+  }, [total]);
+
+  const phase: Phase = useMemo(() => {
     const t = now;
-    if (t < T1) setPhase("textPop");
-    else if (t < T1 + T2) setPhase("pixelize");
-    else if (t < T1 + T2 + T3) setPhase("logoGrow");
-    else if (t < T1 + T2 + T3 + T4) setPhase("handleTurn");
-    else if (t < T1 + T2 + T3 + T4 + T5) setPhase("logoShrink");
-    else if (t < total) setPhase("doorsOpen");
-    else setPhase("done");
+    if (t < T1) return "textPop";
+    if (t < T1 + T2) return "pixelize";
+    if (t < T1 + T2 + T3) return "logoGrow";
+    if (t < T1 + T2 + T3 + T4) return "handleTurn";
+    if (t < T1 + T2 + T3 + T4 + T5) return "logoShrink";
+    if (t < total) return "doorsOpen";
+    return "done";
   }, [now, total, T1, T2, T3, T4, T5]);
 
+
+  // Call onDone exactly once.
   useEffect(() => {
-    if (phase === "done") onDone?.();
+    if (phase !== "done") return;
+    if (doneCalledRef.current) return;
+    doneCalledRef.current = true;
+    onDone?.();
   }, [phase, onDone]);
 
   // Particles: galaxy-like disk with bright core + colorful dust + star glints
