@@ -105,7 +105,7 @@ export default function Promos() {
       heroSub: "Review us and get a free spin!",
       heroRuleLine: "*1 chance per table",
       ctaMain: "Review us",
-      ctaSub: "Write Google Review",
+      ctaSub: "Leave a Review",
       howTitle: "How to enter",
       steps: [
         { t: "Search us on Google", d: "Search GANADA on Google Maps" },
@@ -122,7 +122,7 @@ export default function Promos() {
         "Show your review screen to staff.",
       ],
       footerLine: "Google login may be required.",
-      stickyTitle: "Review → 1 Capsule Spin",
+      stickyTitle: "Get a free spin!",
       stickySub: "Today only · 1 per table",
       toggleLabel: "Language",
     },
