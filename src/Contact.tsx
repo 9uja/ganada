@@ -21,12 +21,6 @@ export default function Contact() {
             >
               Call to order
             </a>
-            <a
-              className="rounded-full border border-neutral-500 px-4 py-2 text-sm hover:bg-neutral-900"
-              href="tel:+60328566183"
-            >
-              Call to order
-            </a>
           </div>
         </div>
 
@@ -34,7 +28,7 @@ export default function Contact() {
           {/* 나중에 Google Maps embed 넣기 */}
           <iframe
             title="Daorae Korean BBQ Restaurant | Solaris Mont Kiara"
-            src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3983.69664140106!2d101.65696167567593!3d3.174328652995886!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x31cc488a5c2b79e3%3A0xdab3e0ba30cc2b83!2sDaorae%20Korean%20BBQ%20Restaurant%20%7C%20Solaris%20Mont%20Kiara!5e0!3m2!1sko!2smy!4v1769358233779!5m2!1sko!2smy"
+            src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d248.98103988362922!2d101.6597434493344!3d3.1743294992064657!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x31cc49b327a194df%3A0xda838a1612dbe67a!2sGANADA%20Korean%20BBQ!5e0!3m2!1sko!2smy!4v1772370387110!5m2!1sko!2smy" width="600" height="450" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"
             className="h-full w-full"
             style={{ border: 0 }}
             allowFullScreen
